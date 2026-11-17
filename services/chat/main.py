@@ -234,7 +234,8 @@ def chat(body: ChatIn):
     question = body.message.strip()
     d = {
         "decision_id": f"d-{uuid.uuid4().hex[:12]}",
-        "conversation_id": body.conversation_id or f"c-{uuid.uuid4().hex[:8]}",
+        # 128 random bits: the conversation ID is what lets a browser reopen the chat later
+        "conversation_id": body.conversation_id or f"c-{uuid.uuid4().hex}",
         "message": question, "decision": "escalate", "answer": "", "confidence": None,
         "threshold": None, "citations": [], "ticket_id": None, "escalation_pending": False,
         "degraded": False, "reason": "low_confidence", "model": None,

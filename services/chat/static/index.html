@@ -23,7 +23,10 @@
   .pill b { color: var(--ink); font-weight: 600; }
   .pill.open { border-color: var(--bad); color: var(--bad); background: var(--bad-bg); }
   .pill.open b { color: var(--bad); }
-  .switch { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; }
+  .newchat { margin-left: auto; font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 8px;
+             border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  .newchat:hover { border-color: var(--accent); color: var(--accent); }
+  .switch { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; }
   .switch input { accent-color: var(--accent); }
   main { flex: 1; overflow-y: auto; padding: 24px 20px; }
   .thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
@@ -85,6 +88,7 @@
 <header>
   <h1>Helix Cloud Support</h1>
   <div class="status" id="status"></div>
+  <button class="newchat" id="newChat" type="button" title="Start a fresh conversation">New conversation</button>
   <label class="switch" title="Show how the assistant made each decision (for demos)">
     <input type="checkbox" id="techToggle"> Technical details
   </label>
@@ -121,7 +125,7 @@ const main = document.getElementById('main');
 const input = document.getElementById('input');
 const send = document.getElementById('send');
 const toggle = document.getElementById('techToggle');
-let conversationId = null;
+let conversationId = localStorage.getItem('helix-conversation');
 
 // Customer view by default; the switch reveals the decision details for demos.
 toggle.checked = localStorage.getItem('helix-tech') === '1';
@@ -258,17 +262,55 @@ async function poll() {
   } catch { /* try again on the next tick */ }
 }
 
-async function startLive() {
+async function startLive(resumed) {
   live = true;
   document.body.classList.add('live');
   input.placeholder = 'Message the support agent…';
-  // only show messages from now on
-  const c = await (await fetch(`/conversations/${conversationId}`)).json();
-  const fresh = c.messages.filter(m => m.role === 'system').slice(-1);
-  lastSeq = Math.max(0, ...c.messages.map(m => m.seq));
-  fresh.forEach(m => thread.append(el('div', 'system', m.text)));
-  scrollDown();
+  if (!resumed) {
+    // only show messages from now on
+    const c = await (await fetch(`/conversations/${conversationId}`)).json();
+    const fresh = c.messages.filter(m => m.role === 'system').slice(-1);
+    lastSeq = Math.max(0, ...c.messages.map(m => m.seq));
+    fresh.forEach(m => thread.append(el('div', 'system', m.text)));
+    scrollDown();
+  }
+  clearInterval(pollTimer);
   pollTimer = setInterval(poll, 1500);
+}
+
+// ---------------------------------------------------------------- continue a conversation later
+// The server stores every conversation; the browser only needs to remember which one is ours.
+function remember(cid) {
+  conversationId = cid;
+  localStorage.setItem('helix-conversation', cid);
+}
+
+async function restore() {
+  if (!conversationId) return;
+  let c;
+  try {
+    const res = await fetch(`/conversations/${conversationId}`);
+    if (res.status === 404) { localStorage.removeItem('helix-conversation'); conversationId = null; return; }
+    c = await res.json();
+  } catch { return; }
+  if (!c.messages.length) return;
+  document.getElementById('empty')?.remove();
+  const since = new Date(c.messages[0].created_at * 1000);
+  thread.append(el('div', 'system', `Continuing your conversation from ${since.toLocaleString()}`));
+  for (const m of c.messages) {
+    if (m.role === 'user') thread.append(el('div', 'msg user', m.text));
+    else if (m.role === 'agent') thread.append(renderAgent(m));
+    else if (m.role === 'system') thread.append(el('div', 'system', m.text));
+    else thread.append(el('div', 'msg bot', m.text));
+    lastSeq = Math.max(lastSeq, m.seq);
+  }
+  if (c.status === 'WAITING_AGENT' || c.status === 'LIVE') startLive(true);
+  scrollDown();
+}
+
+function newConversation() {
+  localStorage.removeItem('helix-conversation');
+  location.reload();
 }
 
 function stopLive() {
@@ -306,7 +348,7 @@ async function ask(text) {
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const r = await res.json();
-    conversationId = r.conversation_id;
+    remember(r.conversation_id);
     if (r.decision === 'live') { typing.remove(); if (!live) startLive(); return; }
     typing.replaceWith(renderBot(r));
   } catch (e) {
@@ -318,6 +360,8 @@ async function ask(text) {
 
 document.getElementById('form').addEventListener('submit', e => { e.preventDefault(); ask(input.value); });
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => ask(c.dataset.q)));
+document.getElementById('newChat').addEventListener('click', newConversation);
+restore();
 refreshStatus();
 setInterval(refreshStatus, 5000);
 input.focus();
