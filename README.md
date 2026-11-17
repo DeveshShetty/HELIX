@@ -31,10 +31,10 @@ Stop and wipe all data: `docker compose down -v`
 
 | Service | Owner | Key pattern |
 |---|---|---|
-| Chat / RAG Support | _TBD_ | Circuit breaker on retrieval + confidence threshold |
-| Incident / Ticket | _TBD_ | Transactional outbox |
-| On-Call & Escalation | _TBD_ | Strongly consistent roster + idempotent ack |
-| Knowledge Base / Ingestion | _TBD_ | Async, idempotent re-indexing |
+| Chat / RAG Support | Devesh Shetty | Circuit breaker on retrieval + confidence threshold |
+| Incident / Ticket | Aditya Mahendru | Transactional outbox |
+| On-Call & Escalation | Raheel Vasudeva | Strongly consistent roster + idempotent ack |
+| Knowledge Base / Ingestion | Liu Yang | Async, idempotent re-indexing |
 
 ## Repository layout
 
@@ -45,4 +45,6 @@ monitoring/        Prometheus scrape config, Grafana provisioning + dashboard
 docs/              plan, ADRs, AI-disclosure log, runbook
 ```
 
-See [docs/PLAN.md](docs/PLAN.md) for the phased build plan.
+- [docs/PLAN.md](docs/PLAN.md): phased build plan
+- [docs/CONTRACTS.md](docs/CONTRACTS.md): APIs and events between services (read this first)
+- [docs/TASKS.md](docs/TASKS.md): who does what, and how to get started
