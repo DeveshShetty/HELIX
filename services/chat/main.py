@@ -177,6 +177,9 @@ start_daemon(escalation_worker, name="chat-escalation-worker")
 
 def _escalate(d: dict, question: str, retrieved_ids: list[str], why: str) -> dict:
     d["decision"] = "escalate"
+    if d.get("dry_run"):
+        d["answer"] = f"{why} (dry run: no ticket opened)"
+        return d
     payload = {"title": question[:120], "question": question, "severity": "medium",
                "conversation_id": d["conversation_id"], "confidence": d["confidence"],
                "retrieved_doc_ids": retrieved_ids}
@@ -199,6 +202,9 @@ def _escalate(d: dict, question: str, retrieved_ids: list[str], why: str) -> dic
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
     conversation_id: str | None = None
+    # Evaluation mode: identical decision logic, but an escalation does NOT open a
+    # ticket (running the 50-question test set must not page on-call 20 times).
+    dry_run: bool = False
 
 
 class FeedbackIn(BaseModel):
@@ -217,6 +223,7 @@ def chat(body: ChatIn):
         "degraded": False, "reason": "low_confidence", "model": None,
         "prompt_version": llm.PROMPT_VERSION, "index_version": None, "embedding_model": None,
         "sources": [], "tokens": {"prompt": 0, "completion": 0}, "cost_usd": 0.0,
+        "dry_run": body.dry_run,
     }
 
     # 1. direct prompt injection in the user's message

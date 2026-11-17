@@ -1,84 +1,45 @@
-# Task breakdown
+# Status and remaining work
 
-Everyone owns **one service + one ADR + one shared task**. Work on your own
-branch, open a Pull Request into `main`, and get one teammate to review it.
-Commit little and often: the repo history is marking evidence.
+All four services are built by Devesh Shetty (the other members withdrew
+from the project; the coordinator should be informed). Ownership in the
+contribution statement must reflect who did what.
 
-Before you start: read [CONTRACTS.md](CONTRACTS.md). That is what the other
-services expect from yours.
+## Built and tested
 
-## Getting started (everyone)
+- [x] Phase 0: skeleton, shared library, compose, Prometheus, Grafana
+- [x] Chat / RAG: UI, decision path, circuit breaker, deadline + retry budget, injection guard,
+      small talk, per-model thresholds, version stamps, token budget + daily ceiling, escalation outbox
+- [x] Incident / Ticket: state machine, outbox, idempotency keys, revisions, reopen
+- [x] Knowledge Base: hash-v1 + nomic-embed-text embedders, versioned index, blue/green rebuild,
+      idempotent revision-ordered consumer, withdrawal on reopen, embedding cost
+- [x] On-Call: roster with optimistic concurrency, durable ack timers, escalation chain, console
+- [x] Helix Cloud knowledge base: 35 documents incl. 2 poisoned
+- [x] 50-question test set, calibration curve, flip test (docs/EVIDENCE.md)
+- [x] Failure-injection demos (scripts/demo.py) and runbook (docs/RUNBOOK.md)
+- [x] Dashboard: golden signals, AI cost/budget, resilience and consistency panels
 
-```bash
-git clone https://github.com/DeveshShetty/HELIX.git
-cd HELIX
-git checkout -b feature/<your-service>
-docker compose up --build          # everything should come up healthy
-```
-Your service lives in `services/<name>/main.py`. Use the shared helpers in
-`common/` (outbox, idempotent consumer, circuit breaker, metrics); they are
-adapted from our Lab 2 and Lab 3 code.
+## Proposal feedback (Dr Nag)
 
-Log every significant AI assist in `docs/ai-disclosure.md` as you go (the
-appendix is mandatory and marked). Write your ADR yourself: the brief says
-trade-off reasoning cannot be delegated to AI.
+| # | Point | Where it is addressed |
+|---|---|---|
+| 1 | Define confidence from measurable signals | `compute_confidence` in services/chat/main.py; groundedness check in llm.py |
+| 2 | Calibrate on a 40–50 question test set, plot the curve | eval/run_eval.py, eval/results/threshold_curve.svg, EVIDENCE E1 |
+| 3 | Stamp chunks/answers with versions; threshold per model | chunk `model` column; response stamps; `CONFIDENCE_THRESHOLDS`; EVIDENCE E2 |
+| 4 | Measure decision flips over 20 runs | eval/flip_test.py, EVIDENCE E3 |
+| 5 | Feedback loop as injection vector; source tags; no tools | staff-written summary only; `origin`/`author` on chunks; EVIDENCE E7 |
+| 6 | Token budget per query + daily ceiling | `MAX_PROMPT_TOKENS`, `DAILY_*_CEILING`; EVIDENCE E6 |
+| 7 | Escalation never lost; timers survive restart | chat escalation outbox; pages.deadline in DB; EVIDENCE E5 |
+| 8 | Reopened incident withdraws the answer | `incident.reopened`, revision ordering in Knowledge |
 
----
+## Remaining (cannot be delegated to AI under module policy)
 
-## Devesh Shetty: Chat / RAG Service (`feature/chat`)
-
-- [ ] `POST /chat` per contract §4
-- [ ] KB client: timeout + retry with backoff + circuit breaker (`common.circuit_breaker`)
-- [ ] Confidence score + `CONFIDENCE_THRESHOLD` env var (tunable, logged per decision)
-- [ ] Escalate via `POST /tickets` with `Idempotency-Key: chat-<decision_id>`
-- [ ] KB down / circuit open → escalate with `degraded: true`, never guess
-- [ ] LLM: simulated (default) + Ollama `llama3.2:1b` (`LLM_MODE=ollama`)
-- [ ] Token + notional cost metrics (`llm_tokens_total`, `llm_cost_usd_total`)
-- [ ] Prompt-injection guard (user input AND retrieved documents)
-- [ ] `GET /decisions`, `POST /decisions/{id}/feedback` (threshold calibration)
-- [ ] **ADR:** how confidence is computed and how the threshold is set
-- [ ] **Shared:** docker-compose / integration, keep `main` running
-
-## Liu Yang: Knowledge Base Service (`feature/knowledge`)
-
-- [ ] Load `services/knowledge/seed/*.md` on startup (format: see `seed/README.md`)
-- [ ] Chunk + embed with built-in `hash-v1` embedder; store vectors in SQLite
-- [ ] `POST /search`, `GET /index`, `POST /documents` per contract §1
-- [ ] Consume `incident.resolved` → upsert `inc-<ticket_id>`; idempotent on `event_id`
-- [ ] Metrics: `kb_chunks`, `kb_reindex_total`, `events_consumed_total`
-- [ ] Phase 5: `POST /index/rebuild` to `nomic-embed-text` (Ollama): build new index alongside, then switch over
-- [ ] **ADR:** embedding model / index version as a deployment unit
-- [ ] **Shared:** write the Helix Cloud knowledge base (~12 runbooks, ~15 FAQs,
-      ~8 past incidents) + `eval/questions.jsonl` (~30 labelled questions)
-
-## Aditya Mahendru: Incident / Ticket Service (`feature/tickets`)
-
-- [ ] Tickets table + state machine `OPEN → ACKED → RESOLVED`; illegal transition → 409
-- [ ] `POST /tickets` with required `Idempotency-Key` (same key → same ticket)
-- [ ] `GET /tickets/{id}`, `GET /tickets?status=`, `/ack`, `/resolve` per contract §2
-- [ ] Every state change + its event in ONE transaction (`common.db.enqueue`), relay thread publishes
-- [ ] Repeated ack/resolve → 200, no duplicate event
-- [ ] Metric: `outbox_backlog`
-- [ ] **ADR:** transactional outbox vs. writing to DB and queue separately (dual-write)
-- [ ] **Shared:** finish the Grafana dashboard + `docs/RUNBOOK.md` (how to observe, break, recover)
-
-## Raheel Vasudeva: On-Call & Escalation Service (`feature/oncall`)
-
-- [ ] Roster table with `version`; `PUT /roster` uses optimistic concurrency (stale → 409)
-- [ ] Consume `incident.opened` → create page for level 0; idempotent on `event_id`
-- [ ] Ack timer: deadlines stored in DB (survive restart); background loop escalates on timeout
-- [ ] `POST /pages/{id}/ack` → idempotent; calls Tickets `/ack` with timeout + retry
-- [ ] Consume `incident.acked` / `incident.resolved` → cancel pending pages
-- [ ] Metrics: `pages_sent_total`, `escalations_total`
-- [ ] **ADR:** strong consistency on the roster vs. eventual
-- [ ] **Shared:** `scripts/` failure-injection demos: kill Knowledge (breaker trips),
-      stop RabbitMQ (outbox backlog grows, then drains), replay a duplicate event
-
-## Together
-
-- [ ] 5th ADR (e.g. why an async event bus for the incident lifecycle instead of synchronous calls)
-- [ ] C4 diagrams (context + container) that match the code
-- [ ] Report (≤ 8 pages), AI-disclosure appendix, contribution statement
-- [ ] Week 10: bring 2–3 draft ADRs to the interim check
-- [ ] Rehearse the 3-minute demo: ask → answer; ask gap → ticket → page → ack →
-      resolve → ask again → answered; kill KB → degraded escalation
+- [ ] **Tell the coordinator** that the other members withdrew, and name the owner of each service
+- [ ] **Week 10 ADR check:** draft the answer-or-escalate ADR (what confidence means, the
+      threshold, the rejected alternative, the fact that would change your mind) using EVIDENCE E1–E4
+- [ ] Five ADRs in the five-band form (docs/adr/TEMPLATE.md). Candidates:
+      answer-or-escalate threshold; index versioning / blue-green rebuild; transactional outbox;
+      roster consistency; async event bus vs synchronous calls; escalation outbox
+- [ ] Report (≤ 8 pages): C4 context + container diagrams, trade-off analyses, consistency and
+      resilience sections citing EVIDENCE, AI section, cost/ops view. Proofread (feedback asked for it)
+- [ ] AI-disclosure appendix (from docs/ai-disclosure.md) and contribution statement
+- [ ] Rehearse the 3-minute demo and be able to explain every service (viva)

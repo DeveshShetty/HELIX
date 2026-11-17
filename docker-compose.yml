@@ -27,7 +27,8 @@ services:
       KNOWLEDGE_URL: http://knowledge:8004
       TICKETS_URL: http://tickets:8002
       # one threshold PER EMBEDDING MODEL; a model missing here => always escalate
-      CONFIDENCE_THRESHOLDS: ${CONFIDENCE_THRESHOLDS:-{"hash-v1":0.30}}
+      # provisional: from eval/results/threshold_curve.csv on the 50-question set (hash-v1)
+      CONFIDENCE_THRESHOLDS: ${CONFIDENCE_THRESHOLDS:-{"hash-v1":0.40}}
       DAILY_COST_CEILING_USD: ${DAILY_COST_CEILING_USD:-0.50}
       MAX_PROMPT_TOKENS: ${MAX_PROMPT_TOKENS:-1500}
       LLM_MODE: ${LLM_MODE:-simulated}          # simulated | ollama

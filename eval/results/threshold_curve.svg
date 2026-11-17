@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="440" font-family="system-ui, sans-serif" font-size="12">
+<rect width="640" height="440" fill="#fff"/>
+<text x="70" y="24" font-size="15" font-weight="600" fill="#1d2330">Answer rate vs wrong-answer rate as the threshold moves</text>
+<text x="70" y="40" fill="#6b7280">50 labelled questions · embedding model hash-v1 · index hash-v1-20261117T184243</text>
+<line x1="70" x2="610" y1="380.0" y2="380.0" stroke="#e3e6eb"/>
+<text x="62" y="384.0" text-anchor="end" fill="#6b7280">0%</text>
+<line x1="70.0" x2="70.0" y1="50" y2="380" stroke="#e3e6eb"/>
+<text x="70.0" y="398" text-anchor="middle" fill="#6b7280">0%</text>
+<line x1="70" x2="610" y1="314.0" y2="314.0" stroke="#e3e6eb"/>
+<text x="62" y="318.0" text-anchor="end" fill="#6b7280">20%</text>
+<line x1="178.0" x2="178.0" y1="50" y2="380" stroke="#e3e6eb"/>
+<text x="178.0" y="398" text-anchor="middle" fill="#6b7280">6%</text>
+<line x1="70" x2="610" y1="248.0" y2="248.0" stroke="#e3e6eb"/>
+<text x="62" y="252.0" text-anchor="end" fill="#6b7280">40%</text>
+<line x1="286.0" x2="286.0" y1="50" y2="380" stroke="#e3e6eb"/>
+<text x="286.0" y="398" text-anchor="middle" fill="#6b7280">12%</text>
+<line x1="70" x2="610" y1="182.0" y2="182.0" stroke="#e3e6eb"/>
+<text x="62" y="186.0" text-anchor="end" fill="#6b7280">60%</text>
+<line x1="394.0" x2="394.0" y1="50" y2="380" stroke="#e3e6eb"/>
+<text x="394.0" y="398" text-anchor="middle" fill="#6b7280">18%</text>
+<line x1="70" x2="610" y1="115.99999999999999" y2="115.99999999999999" stroke="#e3e6eb"/>
+<text x="62" y="119.99999999999999" text-anchor="end" fill="#6b7280">80%</text>
+<line x1="502.0" x2="502.0" y1="50" y2="380" stroke="#e3e6eb"/>
+<text x="502.0" y="398" text-anchor="middle" fill="#6b7280">24%</text>
+<line x1="70" x2="610" y1="50.0" y2="50.0" stroke="#e3e6eb"/>
+<text x="62" y="54.0" text-anchor="end" fill="#6b7280">100%</text>
+<line x1="610.0" x2="610.0" y1="50" y2="380" stroke="#e3e6eb"/>
+<text x="610.0" y="398" text-anchor="middle" fill="#6b7280">30%</text>
+<text x="340.0" y="426" text-anchor="middle" fill="#1d2330">wrong-answer rate (lower is safer)</text>
+<text transform="translate(18,215.0) rotate(-90)" text-anchor="middle" fill="#1d2330">answer rate (higher is more useful)</text>
+<polyline points="590.1999999999999,50.0 550.6000000000001,50.0 469.6,50.0 390.40000000000003,50.0 390.40000000000003,50.0 269.8,50.0 230.20000000000002,50.0 230.20000000000002,50.0 190.60000000000002,50.0 190.60000000000002,70.46000000000002 190.60000000000002,81.02 109.6,91.25 109.6,112.03999999999999 109.6,132.5 109.6,183.98000000000002 70.0,215.0 70.0,348.98 70.0,369.77 70.0,380.0 70.0,380.0 70.0,380.0" fill="none" stroke="#2f5bea" stroke-width="2"/>
+<circle cx="590.1999999999999" cy="50.0" r="3.5" fill="#2f5bea"/>
+<text x="598.1999999999999" y="44.0" fill="#2f5bea">t=0.00</text>
+<circle cx="550.6000000000001" cy="50.0" r="3.5" fill="#2f5bea"/>
+<text x="558.6000000000001" y="44.0" fill="#2f5bea">t=0.05</text>
+<circle cx="469.6" cy="50.0" r="3.5" fill="#2f5bea"/>
+<text x="477.6" y="44.0" fill="#2f5bea">t=0.10</text>
+<circle cx="390.40000000000003" cy="50.0" r="3.5" fill="#2f5bea"/>
+<text x="398.40000000000003" y="44.0" fill="#2f5bea">t=0.15</text>
+<circle cx="390.40000000000003" cy="50.0" r="3.5" fill="#2f5bea"/>
+<circle cx="269.8" cy="50.0" r="3.5" fill="#2f5bea"/>
+<text x="277.8" y="44.0" fill="#2f5bea">t=0.25</text>
+<circle cx="230.20000000000002" cy="50.0" r="3.5" fill="#2f5bea"/>
+<text x="238.20000000000002" y="44.0" fill="#2f5bea">t=0.30</text>
+<circle cx="230.20000000000002" cy="50.0" r="3.5" fill="#2f5bea"/>
+<circle cx="190.60000000000002" cy="50.0" r="6" fill="#b42318"/>
+<text x="198.60000000000002" y="44.0" fill="#b42318">t=0.40</text>
+<circle cx="190.60000000000002" cy="70.46000000000002" r="3.5" fill="#2f5bea"/>
+<text x="198.60000000000002" y="64.46000000000002" fill="#2f5bea">t=0.45</text>
+<circle cx="190.60000000000002" cy="81.02" r="3.5" fill="#2f5bea"/>
+<text x="198.60000000000002" y="75.02" fill="#2f5bea">t=0.50</text>
+<circle cx="109.6" cy="91.25" r="3.5" fill="#2f5bea"/>
+<text x="117.6" y="85.25" fill="#2f5bea">t=0.55</text>
+<circle cx="109.6" cy="112.03999999999999" r="3.5" fill="#2f5bea"/>
+<text x="117.6" y="106.03999999999999" fill="#2f5bea">t=0.60</text>
+<circle cx="109.6" cy="132.5" r="3.5" fill="#2f5bea"/>
+<text x="117.6" y="126.5" fill="#2f5bea">t=0.65</text>
+<circle cx="109.6" cy="183.98000000000002" r="3.5" fill="#2f5bea"/>
+<text x="117.6" y="177.98000000000002" fill="#2f5bea">t=0.70</text>
+<circle cx="70.0" cy="215.0" r="3.5" fill="#2f5bea"/>
+<text x="78.0" y="209.0" fill="#2f5bea">t=0.75</text>
+<circle cx="70.0" cy="348.98" r="3.5" fill="#2f5bea"/>
+<text x="78.0" y="342.98" fill="#2f5bea">t=0.80</text>
+<circle cx="70.0" cy="369.77" r="3.5" fill="#2f5bea"/>
+<text x="78.0" y="363.77" fill="#2f5bea">t=0.85</text>
+<circle cx="70.0" cy="380.0" r="3.5" fill="#2f5bea"/>
+<text x="78.0" y="374.0" fill="#2f5bea">t=0.90</text>
+<circle cx="70.0" cy="380.0" r="3.5" fill="#2f5bea"/>
+<circle cx="70.0" cy="380.0" r="3.5" fill="#2f5bea"/>
+</svg>

@@ -1,11 +1,13 @@
-# AI Support Agent & Incident Escalation Platform
+# HELIX: AI Support Agent & Incident Escalation Platform
 
-COMP41720 Distributed Systems — Group 18 — Option B (AI-native).
+COMP41720 Distributed Systems, Group 18, Option B (AI-native).
 
-A retrieval-augmented support agent answers questions from a knowledge base of
-runbooks, FAQs and past incidents. When it cannot ground an answer confidently
-it opens a ticket, which is paged to on-call; once resolved, the fix is
-re-indexed so the same question is answered directly next time.
+A retrieval-augmented support agent answers questions about **Helix Cloud**, a
+fictional SaaS platform, from runbooks, FAQs and past incidents. When it cannot
+ground an answer confidently it opens a ticket, which pages the on-call
+engineer and escalates up the chain until someone acks. Once resolved, the
+engineer's fix is re-indexed, so the same question is answered directly next
+time. If the fix turns out to be wrong, reopening the ticket withdraws it.
 
 ## Quick start (one command)
 
@@ -13,52 +15,73 @@ re-indexed so the same question is answered directly next time.
 docker compose up --build
 ```
 
-Runs fully offline at zero cost (simulated LLM by default; Ollama optional).
+Runs fully offline at zero cost. All data is synthetic.
 
-| Component | URL |
+| Open | URL |
 |---|---|
-| **Chat app (start here)** | **http://localhost:8001** |
-| Chat / RAG Service API | http://localhost:8001/docs |
-| Incident / Ticket Service | http://localhost:8002/docs |
-| On-Call & Escalation Service | http://localhost:8003/docs |
-| Knowledge Base Service | http://localhost:8004/docs |
-| RabbitMQ UI (guest/guest) | http://localhost:15672 |
-| Prometheus | http://localhost:9090 |
+| **Chat app** | http://localhost:8001 |
+| **On-call console** | http://localhost:8003 |
 | Grafana dashboard | http://localhost:3000 |
+| RabbitMQ (guest / guest) | http://localhost:15672 |
+| Prometheus | http://localhost:9090 |
+| API docs | http://localhost:8001/docs · 8002/docs · 8003/docs · 8004/docs |
 
-Stop and wipe all data: `docker compose down -v`
+Stop: `docker compose down` · wipe all data: `docker compose down -v`
 
 ## Try it
 
-1. Open http://localhost:8001 and click the example questions.
-2. Check answer-vs-escalate accuracy: `python eval/run_eval.py --sweep`
-3. Kill the knowledge base and keep chatting: `docker compose stop knowledge`.
-   Replies escalate and are marked *degraded*; after 3 failures the circuit
-   opens. `docker compose start knowledge` and it recovers by itself.
-4. Real LLM instead of the simulated one (needs Ollama running with
-   `llama3.2:1b`): set `LLM_MODE=ollama` in `.env`, then `docker compose up -d chat`.
+1. Chat app: click the example questions (answered, escalated, poisoned document, injection).
+2. Ask something it can't answer, e.g. *"how do I export invoices as csv"*: it opens a ticket.
+3. On-call console: watch the page escalate (alice → bob → carol every 30 s), **Ack**, then
+   **Resolve** with a summary and fix.
+4. Ask the same question again: answered, citing the resolved incident.
+5. **Reopen** the ticket: the answer is withdrawn and the question escalates again.
+6. Break things: `python scripts/demo.py kb-down` (see [docs/RUNBOOK.md](docs/RUNBOOK.md)).
+7. Calibrate: `python eval/run_eval.py` and `python eval/flip_test.py`.
 
-> Knowledge and Tickets are currently **temporary mocks** so Chat can be
-> demoed; their owners are replacing them (see docs/TASKS.md).
+## Architecture
 
-## Services and owners
+```
+              ┌──────────── sync HTTP (deadline, retry budget, circuit breaker) ───────────┐
+ User ─► Chat / RAG ──────────────────────────────────────────────────────────► Knowledge Base
+            │  escalate (Idempotency-Key, local outbox)                                ▲
+            ▼                                                                         │ incident.resolved
+       Incident / Ticket ──outbox──► RabbitMQ (support.events) ──────────────────────┤ incident.reopened
+            ▲                              │ incident.opened / acked / resolved / reopened
+            │ ack / resolve / reopen       ▼
+            └────────────────────── On-Call & Escalation ◄── responders (console)
+```
 
-| Service | Owner | Key pattern |
+| Service | Port | Owns | Key patterns |
+|---|---|---|---|
+| Chat / RAG | 8001 | decision log, escalation outbox | circuit breaker, deadline + retry budget, confidence threshold per embedding model, injection guard, token budget + daily ceiling |
+| Incident / Ticket | 8002 | tickets (system of record) | transactional outbox, idempotency keys, revisioned state machine |
+| On-Call & Escalation | 8003 | roster, pages | optimistic-concurrency roster, durable ack timers, idempotent consumer + ack |
+| Knowledge Base | 8004 | documents, versioned vector index | blue/green index rebuild, idempotent revision-ordered consumer |
+
+Each service has its own SQLite database (database-per-service) and its own Dockerfile.
+
+## AI configuration
+
+| Setting | Default | Notes |
 |---|---|---|
-| Chat / RAG Support | Devesh Shetty | Circuit breaker on retrieval + confidence threshold |
-| Incident / Ticket | Aditya Mahendru | Transactional outbox |
-| On-Call & Escalation | Raheel Vasudeva | Strongly consistent roster + idempotent ack |
-| Knowledge Base / Ingestion | Liu Yang | Async, idempotent re-indexing |
+| `LLM_MODE` | `simulated` | `ollama` uses `llama3.2:1b` on the host (`ollama serve`) |
+| `CONFIDENCE_THRESHOLDS` | `{"hash-v1": 0.40}` | per embedding model; from `eval/results/threshold_curve.csv` |
+| `EMBEDDING_MODEL` | `hash-v1` | built in; `nomic-embed-text` via Ollama and `POST /index/rebuild` |
+| `DAILY_COST_CEILING_USD` | `0.50` | notional; reached → escalate |
+| `MAX_PROMPT_TOKENS` | `1500` | per query; exceeded → escalate |
+| `ACK_TIMEOUT_SECONDS` | `30` | page escalates to the next responder after this |
 
-## Repository layout
+Set them in a `.env` file next to `docker-compose.yml`.
+
+## Repository
 
 ```
-common/            shared library: RabbitMQ, outbox, circuit breaker, metrics
-services/<name>/   one folder + Dockerfile per independently deployable service
-monitoring/        Prometheus scrape config, Grafana provisioning + dashboard
-docs/              plan, ADRs, AI-disclosure log, runbook
+common/              RabbitMQ helpers, topology, outbox, circuit breaker, metrics
+services/<name>/     one independently deployable service each
+services/knowledge/seed/   the Helix Cloud knowledge base (35 documents, synthetic)
+eval/                labelled questions, calibration curve, flip test, results/
+scripts/             failure-injection demos, event replay
+monitoring/          Prometheus config, Grafana dashboard
+docs/                CONTRACTS, RUNBOOK, EVIDENCE, PLAN, ADRs, AI disclosure
 ```
-
-- [docs/PLAN.md](docs/PLAN.md): phased build plan
-- [docs/CONTRACTS.md](docs/CONTRACTS.md): APIs and events between services (read this first)
-- [docs/TASKS.md](docs/TASKS.md): who does what, and how to get started

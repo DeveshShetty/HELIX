@@ -1,0 +1,29 @@
+Flip test results (2026-11-18)
+
+=== LLM_MODE=simulated
+20 runs each of the 6 questions closest to the threshold (threshold 0.4, index hash-v1-20261117T184243)
+
+ conf decisions                flips answer texts  question
+ 0.42 answer x20                  no            1  where is the status page?
+ 0.42 answer x20                  no            1  I accidentally committed my api key to github, what do I do
+ 0.38 escalate x20                no            0  payment api returns 401 unauthorized
+ 0.48 answer x20                  no            1  I lost my phone with the authenticator app, how do I get back in?
+ 0.30 escalate x20                no            0  api returns 500 internal server error on the users endpoint
+ 0.53 answer x20                  no            1  dashboard is blank in firefox
+
+0/6 questions flipped decision across 20 runs (LLM: simulated).
+'answer texts' = distinct wordings of the answer: >1 means the generated text varied.
+
+=== ollama llama3.2:1b
+10 runs each of the 4 questions closest to the threshold (threshold 0.4, index hash-v1-20261117T184243)
+
+ conf decisions                flips answer texts  question
+ 0.42 answer x10                  no            3  where is the status page?
+ 0.42 answer x10                  no            1  I accidentally committed my api key to github, what do I do
+ 0.38 escalate x10                no            0  payment api returns 401 unauthorized
+ 0.48 answer x10                  no            3  I lost my phone with the authenticator app, how do I get back in?
+
+0/4 questions flipped decision across 10 runs (LLM: llama3.2:1b).
+'answer texts' = distinct wordings of the answer: >1 means the generated text varied.
+
+
