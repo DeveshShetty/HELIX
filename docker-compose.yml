@@ -53,8 +53,9 @@ services:
       <<: *service-env
       DB_PATH: /data/oncall.db
       TICKETS_URL: http://tickets:8002
+      ACK_TIMEOUT_SECONDS: ${ACK_TIMEOUT_SECONDS:-30}   # unacked page -> next level after this
     volumes: [oncall_data:/data]
-    ports: ["8003:8003"]
+    ports: ["8003:8003"]           # on-call console: http://localhost:8003
     depends_on: *depends-rabbit
 
   knowledge:

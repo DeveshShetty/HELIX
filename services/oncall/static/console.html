@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix Cloud On-Call Console</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #fff; --ink: #1d2330; --muted: #6b7280; --line: #e3e6eb;
+    --accent: #2f5bea; --ok: #16794c; --ok-bg: #e5f5ed; --warn: #9a5b00; --warn-bg: #fdf1dc;
+    --bad: #b42318; --bad-bg: #fde8e7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 12px 20px;
+           display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  .who { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  select, input, textarea { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+  main { max-width: 1040px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 13px; }
+  .chain { display: flex; gap: 6px; align-items: center; }
+  .chain b { color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-weight: 600; }
+  .warn-note { color: var(--warn); background: var(--warn-bg); padding: 6px 10px; border-radius: 8px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .tid { font-weight: 700; }
+  .title { flex: 1; min-width: 200px; }
+  .status { font-size: 11px; font-weight: 700; letter-spacing: .04em; border-radius: 6px; padding: 2px 8px; }
+  .s-OPEN { color: var(--bad); background: var(--bad-bg); }
+  .s-ACKED { color: var(--warn); background: var(--warn-bg); }
+  .s-RESOLVED { color: var(--ok); background: var(--ok-bg); }
+  .pages { margin-top: 8px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+  .pages .live { color: var(--ink); font-weight: 600; }
+  .pages .late { color: var(--bad); }
+  .actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+  button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  form.resolve { display: none; flex-direction: column; gap: 6px; width: 100%; margin-top: 6px; }
+  form.resolve.open { display: flex; }
+  form.resolve textarea { min-height: 70px; }
+  .hint { font-size: 12px; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+  .err { color: var(--bad); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Helix Cloud On-Call <span>· incident console</span></h1>
+  <div class="who">Responding as
+    <select id="me"></select>
+  </div>
+</header>
+<main>
+  <div class="bar" id="bar"></div>
+  <div id="list"><div class="empty">Loading…</div></div>
+</main>
+
+<script>
+const list = document.getElementById('list');
+const bar = document.getElementById('bar');
+const me = document.getElementById('me');
+const openForms = new Set();   // keep resolve forms open across refreshes
+const drafts = {};             // and keep what was typed into them
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+async function post(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || ('HTTP ' + r.status));
+  return data;
+}
+
+function ago(sec) {
+  sec = Math.round(sec);
+  return sec < 60 ? sec + 's' : Math.floor(sec / 60) + 'm ' + (sec % 60) + 's';
+}
+
+function renderTicket(t, now) {
+  const card = el('div', 'card');
+  const top = el('div', 'top');
+  top.append(el('span', 'tid', t.ticket_id), el('span', 'status s-' + t.status, t.status),
+             el('span', 'title', t.title || ''));
+  if (t.revision) top.append(el('span', 'hint', 'rev ' + t.revision));
+  card.append(top);
+
+  const pages = el('div', 'pages');
+  const live = (t.pages || []).find(p => p.status === 'PENDING');
+  for (const p of (t.pages || []).slice().reverse()) {
+    let line = `Page ${p.page_id} → ${p.responder_id} (level ${p.level}): ${p.status.toLowerCase().replace('_', ' ')}`;
+    let cls = '';
+    if (p.status === 'PENDING') {
+      const left = p.deadline - now;
+      line += left > 0 ? ` · escalates in ${ago(left)}` : ' · escalating…';
+      cls = left < 10 ? 'live late' : 'live';
+    }
+    pages.append(el('div', cls, line));
+  }
+  if (t.status === 'RESOLVED' && t.resolution) pages.append(el('div', null, 'Resolution: ' + t.resolution));
+  if (pages.childNodes.length) card.append(pages);
+
+  const actions = el('div', 'actions');
+  const err = el('div', 'err');
+  const run = async (fn) => { err.textContent = ''; try { await fn(); refresh(); } catch (e) { err.textContent = e.message; } };
+
+  if (live) {
+    const b = el('button', 'primary', `Ack page (${live.responder_id})`);
+    b.onclick = () => run(() => post(`/pages/${live.page_id}/ack`, { responder_id: me.value }));
+    actions.append(b);
+  }
+  if (t.status !== 'RESOLVED') {
+    const b = el('button', null, 'Resolve…');
+    const form = el('form', 'resolve' + (openForms.has(t.ticket_id) ? ' open' : ''));
+    const summary = el('input'); summary.placeholder = 'Problem summary (written by you, e.g. "Exporting invoices to CSV")';
+    const resolution = el('textarea'); resolution.placeholder = 'Resolution: the fix, in steps a customer can follow';
+    const d = drafts[t.ticket_id] || {};
+    summary.value = d.summary || ''; resolution.value = d.resolution || '';
+    summary.oninput = resolution.oninput = () => { drafts[t.ticket_id] = { summary: summary.value, resolution: resolution.value }; };
+    const hint = el('div', 'hint', 'Only your summary and resolution are added to the knowledge base, never the customer’s original message.');
+    const submit = el('button', 'primary', 'Resolve and add to knowledge base');
+    submit.type = 'submit';
+    form.append(summary, resolution, hint, submit);
+    form.onsubmit = (e) => { e.preventDefault(); run(async () => {
+      await post(`/incidents/${t.ticket_id}/resolve`, { responder_id: me.value, summary: summary.value, resolution: resolution.value });
+      openForms.delete(t.ticket_id); delete drafts[t.ticket_id];
+    }); };
+    b.onclick = () => { openForms.has(t.ticket_id) ? openForms.delete(t.ticket_id) : openForms.add(t.ticket_id); form.classList.toggle('open'); };
+    actions.append(b, form);
+  } else {
+    const b = el('button', null, 'Reopen (resolution was wrong)');
+    b.onclick = () => run(() => post(`/incidents/${t.ticket_id}/reopen`, { responder_id: me.value, reason: 'resolution did not work' }));
+    actions.append(b);
+  }
+  card.append(actions, err);
+  return card;
+}
+
+async function refresh() {
+  if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return; // don't redraw while typing
+  try {
+    const d = await (await fetch('/console/data')).json();
+    if (!me.options.length) {
+      for (const n of d.roster.chain) me.append(new Option(n, n));
+    }
+    bar.replaceChildren();
+    const chain = el('span', 'chain', 'Escalation chain (roster v' + d.roster.version + '):');
+    d.roster.chain.forEach((n, i) => { chain.append(el('b', null, n)); if (i < d.roster.chain.length - 1) chain.append('→'); });
+    bar.append(chain, el('span', null, `· unacked pages escalate after ${d.ack_timeout_seconds}s`));
+    if (d.source !== 'live') bar.append(el('span', 'warn-note', 'Showing ' + d.source));
+    list.replaceChildren();
+    if (!d.tickets.length) list.append(el('div', 'empty', 'No incidents. When the chat assistant escalates a question, it appears here.'));
+    for (const t of d.tickets) list.append(renderTicket(t, d.now));
+  } catch (e) {
+    list.replaceChildren(el('div', 'empty', 'On-call service unreachable: ' + e.message));
+  }
+}
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>
