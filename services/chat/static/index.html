@@ -112,7 +112,9 @@ async function refreshStatus() {
       s.append(p);
     };
     add('model', c.model);
-    add('threshold', c.confidence_threshold.toFixed(2));
+    add('thresholds', Object.entries(c.thresholds).map(([m, t]) => `${m} ${t}`).join(', '));
+    add('spent today', '$' + c.budget.cost_today_usd.toFixed(4) + ' / $' + c.budget.daily_cost_ceiling_usd.toFixed(2));
+    if (c.escalations_pending) add('escalations waiting', String(c.escalations_pending), 'open');
     add('knowledge base', c.kb_breaker === 'CLOSED' ? 'reachable' : 'circuit ' + c.kb_breaker.toLowerCase(),
         c.kb_breaker === 'CLOSED' ? '' : 'open');
   } catch { /* status is best-effort */ }
@@ -143,7 +145,12 @@ function renderBot(r) {
   }
   item('reason', r.reason.replaceAll('_', ' '));
   if (r.ticket_id) item('ticket', r.ticket_id);
-  if (r.citations.length) item('source', r.citations.join(', '));
+  if (r.escalation_pending) item('ticket', 'queued (' + r.decision_id + ')');
+  if (r.citations.length) {
+    const src = r.sources && r.sources[0];
+    item('source', r.citations.join(', ') + (src && src.origin === 'incident' ? ' (past incident, by ' + src.author + ')' : ''));
+  }
+  if (r.embedding_model) item('index', r.embedding_model);
   if (r.model) item('tokens', `${r.tokens.prompt} + ${r.tokens.completion}`);
   if (r.model) item('cost', '$' + r.cost_usd.toFixed(6));
   box.append(meta);
