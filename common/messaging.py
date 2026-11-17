@@ -12,6 +12,8 @@ from typing import Callable
 
 import pika
 
+from common import topology
+
 EXCHANGE = os.getenv("RABBIT_EXCHANGE", "support.events")
 RABBIT_HOST = os.getenv("RABBIT_HOST", "localhost")
 RABBIT_PORT = int(os.getenv("RABBIT_PORT", "5672"))
@@ -44,12 +46,18 @@ def new_event(event_type: str, aggregate_id: str, data: dict | None = None,
     }
 
 
+_topology_declared = False
+
+
 def publish_event(event: dict) -> None:
     """Publish a persistent event; raises if the broker does not confirm it."""
+    global _topology_declared
     connection = pika.BlockingConnection(connection_parameters())
     try:
         channel = connection.channel()
-        channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
+        if not _topology_declared:
+            topology.declare(channel, EXCHANGE)
+            _topology_declared = True
         channel.confirm_delivery()
         channel.basic_publish(
             exchange=EXCHANGE,
@@ -75,7 +83,7 @@ def consume_forever(queue_name: str, routing_keys: list[str],
         try:
             connection = pika.BlockingConnection(connection_parameters())
             channel = connection.channel()
-            channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
+            topology.declare(channel, EXCHANGE)
             channel.queue_declare(queue=queue_name, durable=True)
             for key in routing_keys:
                 channel.queue_bind(exchange=EXCHANGE, queue=queue_name, routing_key=key)
