@@ -43,6 +43,18 @@
   form.resolve textarea { min-height: 70px; }
   .hint { font-size: 12px; color: var(--muted); }
   .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+  .livetag { font-size: 11px; font-weight: 700; letter-spacing: .04em; border-radius: 6px; padding: 2px 8px;
+             color: #fff; background: var(--bad); animation: pulse 1.6s infinite; }
+  .livetag.on { background: var(--ok); animation: none; }
+  @keyframes pulse { 50% { opacity: .55; } }
+  .chatpanel { margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .chatlog { max-height: 300px; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: #fafbfc; }
+  .line { font-size: 13px; white-space: pre-wrap; }
+  .line .r { font-weight: 700; margin-right: 6px; }
+  .r-user { color: var(--accent); } .r-bot { color: var(--muted); } .r-agent { color: var(--warn); } .r-system { color: var(--muted); font-style: italic; }
+  .why { display: block; font-size: 11px; color: var(--bad); margin-left: 2px; }
+  .chatin { display: flex; gap: 8px; padding: 8px; border-top: 1px solid var(--line); background: #fff; flex-wrap: wrap; }
+  .chatin input { flex: 1; min-width: 200px; }
   .err { color: var(--bad); font-size: 13px; }
 </style>
 </head>
@@ -64,6 +76,76 @@ const bar = document.getElementById('bar');
 const me = document.getElementById('me');
 const openForms = new Set();   // keep resolve forms open across refreshes
 const drafts = {};             // and keep what was typed into them
+const chats = {};              // ticket_id -> { cid, messages, lastSeq, status } for open conversation panels
+
+// ---------------------------------------------------------------- conversation panel
+const ROLE = { user: 'Customer', bot: 'Helix bot', agent: 'Agent', system: 'System' };
+
+function renderLine(m) {
+  const line = el('div', 'line');
+  line.append(el('span', 'r r-' + m.role, m.role === 'agent' ? m.author : ROLE[m.role]), document.createTextNode(m.text));
+  if (m.role === 'bot' && m.decision === 'escalate') {
+    const why = m.confidence !== null && m.confidence !== undefined
+      ? `got stuck: ${m.reason.replaceAll('_', ' ')} (confidence ${m.confidence.toFixed(2)} < threshold ${m.threshold})`
+      : `got stuck: ${m.reason.replaceAll('_', ' ')}`;
+    line.append(el('span', 'why', why));
+  }
+  return line;
+}
+
+async function loadChat(tid) {
+  const c = chats[tid];
+  try {
+    const r = await fetch(`/tickets/${tid}/conversation?after=${c.lastSeq}`);
+    if (!r.ok) { c.error = r.status === 404 ? 'No chat conversation for this ticket.' : 'Chat service unreachable.'; return; }
+    const d = await r.json();
+    c.error = null; c.cid = d.conversation_id; c.status = d.status; c.agent = d.agent_id;
+    const log = document.getElementById('log-' + tid);
+    for (const m of d.messages) {
+      c.messages.push(m); c.lastSeq = Math.max(c.lastSeq, m.seq);
+      if (log) { log.append(renderLine(m)); log.scrollTop = log.scrollHeight; }
+    }
+  } catch { c.error = 'Chat service unreachable.'; }
+}
+
+function chatPanel(t) {
+  const c = chats[t.ticket_id];
+  const panel = el('div', 'chatpanel');
+  const log = el('div', 'chatlog'); log.id = 'log-' + t.ticket_id;
+  if (c.error) log.append(el('div', 'line r-system', c.error));
+  c.messages.forEach(m => log.append(renderLine(m)));
+  panel.append(log);
+  if (c.cid && c.status !== 'CLOSED') {
+    const row = el('form', 'chatin');
+    const box = el('input'); box.placeholder = 'Message the customer…';
+    const send = el('button', 'primary', 'Send'); send.type = 'submit';
+    const end = el('button', null, 'End chat & draft summary'); end.type = 'button';
+    row.onsubmit = async (e) => {
+      e.preventDefault();
+      const text = box.value.trim(); if (!text) return;
+      box.value = '';
+      await post(`/conversations/${c.cid}/messages`, { responder_id: me.value, text });
+      await loadChat(t.ticket_id);
+    };
+    end.onclick = async () => {
+      end.disabled = true; end.textContent = 'Drafting summary…';
+      try {
+        const d = await post(`/conversations/${c.cid}/close`, { responder_id: me.value });
+        drafts[t.ticket_id] = { summary: d.draft_summary, resolution: d.draft_fix, note: d.method };
+        openForms.add(t.ticket_id);
+        await loadChat(t.ticket_id);
+      } finally { refresh(true); }
+    };
+    row.append(box, send, end);
+    panel.append(row);
+  } else if (c.status === 'CLOSED') {
+    panel.append(el('div', 'line r-system', ' Chat ended. Review the drafted summary below, then resolve.'));
+  }
+  setTimeout(() => { log.scrollTop = log.scrollHeight; }, 0);
+  return panel;
+}
+
+setInterval(() => { for (const tid of Object.keys(chats)) loadChat(tid); }, 1500);
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -90,6 +172,10 @@ function renderTicket(t, now) {
   top.append(el('span', 'tid', t.ticket_id), el('span', 'status s-' + t.status, t.status),
              el('span', 'title', t.title || ''));
   if (t.revision) top.append(el('span', 'hint', 'rev ' + t.revision));
+  if (t.live_chat) {
+    top.append(el('span', 'livetag' + (t.live_chat.status === 'LIVE' ? ' on' : ''),
+      t.live_chat.status === 'LIVE' ? 'LIVE CHAT · ' + t.live_chat.agent_id : 'CUSTOMER WAITING IN CHAT'));
+  }
   card.append(top);
 
   const pages = el('div', 'pages');
@@ -116,6 +202,14 @@ function renderTicket(t, now) {
     b.onclick = () => run(() => post(`/pages/${live.page_id}/ack`, { responder_id: me.value }));
     actions.append(b);
   }
+  const convBtn = el('button', null, chats[t.ticket_id] ? 'Hide conversation' : (t.live_chat ? 'Join live chat' : 'Open conversation'));
+  convBtn.onclick = async () => {
+    if (chats[t.ticket_id]) { delete chats[t.ticket_id]; refresh(true); return; }
+    chats[t.ticket_id] = { cid: null, messages: [], lastSeq: 0, status: null, error: null };
+    await loadChat(t.ticket_id);
+    refresh(true);
+  };
+  actions.append(convBtn);
   if (t.status !== 'RESOLVED') {
     const b = el('button', null, 'Resolve…');
     const form = el('form', 'resolve' + (openForms.has(t.ticket_id) ? ' open' : ''));
@@ -124,7 +218,9 @@ function renderTicket(t, now) {
     const d = drafts[t.ticket_id] || {};
     summary.value = d.summary || ''; resolution.value = d.resolution || '';
     summary.oninput = resolution.oninput = () => { drafts[t.ticket_id] = { summary: summary.value, resolution: resolution.value }; };
-    const hint = el('div', 'hint', 'Only your summary and resolution are added to the knowledge base, never the customer’s original message.');
+    const hint = el('div', 'hint', d.note
+      ? `Pre-filled from the chat (${d.note}). It is built from what the customer wrote: check and edit it before resolving. Only this reviewed text is added to the knowledge base.`
+      : 'Only your summary and resolution are added to the knowledge base, never the customer’s original message.');
     const submit = el('button', 'primary', 'Resolve and add to knowledge base');
     submit.type = 'submit';
     form.append(summary, resolution, hint, submit);
@@ -139,12 +235,14 @@ function renderTicket(t, now) {
     b.onclick = () => run(() => post(`/incidents/${t.ticket_id}/reopen`, { responder_id: me.value, reason: 'resolution did not work' }));
     actions.append(b);
   }
+  if (chats[t.ticket_id]) card.append(chatPanel(t));
   card.append(actions, err);
   return card;
 }
 
-async function refresh() {
-  if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return; // don't redraw while typing
+async function refresh(force) {
+  // don't redraw while typing (open chat panels update their own message list in place)
+  if (!force && document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
   try {
     const d = await (await fetch('/console/data')).json();
     if (!me.options.length) {

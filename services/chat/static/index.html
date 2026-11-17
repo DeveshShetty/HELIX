@@ -52,6 +52,17 @@
   .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
   .bar u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
   .typing { color: var(--muted); font-style: italic; }
+  .agent { align-self: flex-start; background: #fff7e6; border: 1px solid #f2d9a6; border-bottom-left-radius: 4px; }
+  .who { display: block; font-size: 12px; font-weight: 600; color: var(--warn); margin-bottom: 2px; }
+  .system { align-self: center; font-size: 13px; color: var(--muted); text-align: center; max-width: 90%; }
+  .choices { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; white-space: normal; }
+  .choices button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer;
+                    border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  .choices button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .choices button:disabled { opacity: .5; cursor: default; }
+  .livebar { display: none; background: #fff7e6; border-bottom: 1px solid #f2d9a6; color: var(--warn);
+             font-size: 13px; padding: 8px 20px; text-align: center; }
+  body.live .livebar { display: block; }
   .empty { text-align: center; color: var(--muted); margin-top: 8vh; }
   .empty h2 { color: var(--ink); font-size: 22px; margin-bottom: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
@@ -78,6 +89,7 @@
     <input type="checkbox" id="techToggle"> Technical details
   </label>
 </header>
+<div class="livebar" id="livebar">Waiting for a support agent…</div>
 
 <main id="main">
   <div class="thread" id="thread">
@@ -174,6 +186,21 @@ function renderBot(r) {
     const n = el('div', 'note ticket');
     n.append('Passed to our support team · reference ', el('b', null, r.ticket_id));
     box.append(n);
+    // Offer a live conversation with a person, or leave it as a ticket.
+    const choices = el('div', 'choices');
+    const talk = el('button', 'primary', 'Chat with a support agent now');
+    const keep = el('button', null, 'Keep it as a ticket');
+    talk.onclick = async () => {
+      talk.disabled = keep.disabled = true;
+      const res = await fetch(`/conversations/${conversationId}/handoff`, { method: 'POST' });
+      if (res.ok) { choices.remove(); startLive(); }
+      else { talk.disabled = keep.disabled = false; }
+    };
+    keep.onclick = () => {
+      choices.replaceWith(el('div', 'source', "OK. An engineer will follow up on " + r.ticket_id + "."));
+    };
+    choices.append(talk, keep);
+    box.append(choices);
   } else if (r.escalation_pending) {
     const n = el('div', 'note ticket');
     n.append('Saved for our support team · reference ', el('b', null, r.decision_id));
@@ -205,9 +232,66 @@ function renderBot(r) {
   return box;
 }
 
+// ---------------------------------------------------------------- live chat with a person
+let live = false, lastSeq = 0, pollTimer = null;
+const livebar = document.getElementById('livebar');
+
+function renderAgent(m) {
+  const box = el('div', 'msg agent');
+  box.append(el('span', 'who', m.author + ' · Helix support'), document.createTextNode(m.text));
+  return box;
+}
+
+async function poll() {
+  try {
+    const c = await (await fetch(`/conversations/${conversationId}?after=${lastSeq}`)).json();
+    for (const m of c.messages) {
+      lastSeq = Math.max(lastSeq, m.seq);
+      if (m.role === 'agent') thread.append(renderAgent(m));
+      else if (m.role === 'system') thread.append(el('div', 'system', m.text));
+      // user/bot messages are already on screen
+    }
+    if (c.messages.length) scrollDown();
+    livebar.textContent = c.status === 'LIVE' ? `You're chatting with ${c.agent_id} from Helix support`
+                                              : 'Waiting for a support agent… keep this window open';
+    if (c.status === 'CLOSED') stopLive();
+  } catch { /* try again on the next tick */ }
+}
+
+async function startLive() {
+  live = true;
+  document.body.classList.add('live');
+  input.placeholder = 'Message the support agent…';
+  // only show messages from now on
+  const c = await (await fetch(`/conversations/${conversationId}`)).json();
+  const fresh = c.messages.filter(m => m.role === 'system').slice(-1);
+  lastSeq = Math.max(0, ...c.messages.map(m => m.seq));
+  fresh.forEach(m => thread.append(el('div', 'system', m.text)));
+  scrollDown();
+  pollTimer = setInterval(poll, 1500);
+}
+
+function stopLive() {
+  live = false;
+  clearInterval(pollTimer);
+  document.body.classList.remove('live');
+  input.placeholder = 'Type your question…';
+}
+
+async function sayToAgent(text) {
+  thread.append(el('div', 'msg user', text));
+  input.value = '';
+  scrollDown();
+  await fetch(`/conversations/${conversationId}/messages`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'user', author: 'customer', text }),
+  });
+}
+
 async function ask(text) {
   text = text.trim();
   if (!text) return;
+  if (live) return sayToAgent(text);
   document.getElementById('empty')?.remove();
   thread.append(el('div', 'msg user', text));
   const typing = el('div', 'msg bot typing', 'Looking that up…');
@@ -222,6 +306,7 @@ async function ask(text) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const r = await res.json();
     conversationId = r.conversation_id;
+    if (r.decision === 'live') { typing.remove(); if (!live) startLive(); return; }
     typing.replaceWith(renderBot(r));
   } catch (e) {
     typing.replaceWith(el('div', 'msg bot', "Sorry, I can't reach our support system right now. Please try again in a minute."));

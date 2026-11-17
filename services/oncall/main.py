@@ -33,6 +33,7 @@ from common.observability import EVENTS_CONSUMED, instrument
 SERVICE = "oncall"
 DB_PATH = os.getenv("DB_PATH", "/data/oncall.db")
 TICKETS_URL = os.getenv("TICKETS_URL", "http://localhost:8002")
+CHAT_URL = os.getenv("CHAT_URL", "http://localhost:8001")
 ACK_TIMEOUT_SECONDS = float(os.getenv("ACK_TIMEOUT_SECONDS", "30"))
 DEFAULT_CHAIN = json.loads(os.getenv("DEFAULT_CHAIN", '["alice", "bob", "carol"]'))   # synthetic names
 
@@ -173,20 +174,30 @@ def escalation_loop() -> None:
 
 # ------------------------------------------------------------------ calls to Tickets
 
-def tickets_call(method: str, path: str, body: dict | None = None, attempts: int = 3) -> dict:
+def _call(base: str, name: str, method: str, path: str, body: dict | None = None,
+          attempts: int = 3, timeout: float = 3.0) -> dict:
     """Timeout + retry with backoff. 4xx are not retried (they are answers, not failures)."""
     for i in range(attempts):
         try:
-            r = httpx.request(method, f"{TICKETS_URL}{path}", json=body, timeout=3.0)
+            r = httpx.request(method, f"{base}{path}", json=body, timeout=timeout)
             if r.status_code < 500:
                 if r.status_code >= 400:
                     raise HTTPException(r.status_code, r.json().get("detail", r.text))
                 return r.json()
         except httpx.TransportError as exc:
             if i == attempts - 1:
-                raise HTTPException(503, f"Ticket Service unavailable: {exc!r}")
+                raise HTTPException(503, f"{name} unavailable: {exc!r}")
         time.sleep(0.3 * 2 ** i)
-    raise HTTPException(503, "Ticket Service unavailable")
+    raise HTTPException(503, f"{name} unavailable")
+
+
+def tickets_call(method: str, path: str, body: dict | None = None, attempts: int = 3) -> dict:
+    return _call(TICKETS_URL, "Ticket Service", method, path, body, attempts)
+
+
+def chat_call(method: str, path: str, body: dict | None = None, attempts: int = 2, timeout: float = 3.0) -> dict:
+    # Conversations (transcripts, live messages) are owned by the Chat service.
+    return _call(CHAT_URL, "Chat Service", method, path, body, attempts, timeout)
 
 
 # ------------------------------------------------------------------ startup
@@ -300,6 +311,34 @@ def reopen_incident(ticket_id: str, body: ReopenIn):
     return tickets_call("POST", f"/tickets/{ticket_id}/reopen", body.model_dump())
 
 
+class AgentMessageIn(BaseModel):
+    responder_id: str = Field(min_length=1)
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class CloseChatIn(BaseModel):
+    responder_id: str = Field(min_length=1)
+
+
+@app.get("/tickets/{ticket_id}/conversation")
+def ticket_conversation(ticket_id: str, after: int = 0):
+    """The customer's stored conversation for this ticket: bot exchange (with why it got stuck) + live chat."""
+    return chat_call("GET", f"/conversations/by-ticket/{ticket_id}?after={after}")
+
+
+@app.post("/conversations/{cid}/messages")
+def agent_message(cid: str, body: AgentMessageIn):
+    return chat_call("POST", f"/conversations/{cid}/messages",
+                     {"role": "agent", "author": body.responder_id, "text": body.text})
+
+
+@app.post("/conversations/{cid}/close")
+def close_chat(cid: str, body: CloseChatIn):
+    """End the live chat; returns a DRAFT summary the responder must review before resolving."""
+    return chat_call("POST", f"/conversations/{cid}/close", {"agent_id": body.responder_id},
+                     attempts=1, timeout=60.0)   # summary drafting may call the LLM
+
+
 @app.get("/console/data")
 def console_data():
     """Everything the console shows. Live tickets from the Ticket Service, falling back
@@ -317,8 +356,15 @@ def console_data():
     by_ticket: dict[str, list] = {}
     for p in pages:
         by_ticket.setdefault(p["ticket_id"], []).append(p)
+    try:    # which tickets have a customer waiting in / talking over live chat
+        live = {c["ticket_id"]: c for c in chat_call("GET", "/conversations?status=WAITING_AGENT,LIVE", attempts=1)}
+    except HTTPException:
+        live = {}
     for t in tickets:
         t["pages"] = by_ticket.get(t["ticket_id"], [])
+        c = live.get(t["ticket_id"])
+        t["live_chat"] = {"conversation_id": c["conversation_id"], "status": c["status"],
+                          "agent_id": c["agent_id"]} if c else None
     return {"now": time.time(), "source": source, "roster": get_roster(),
             "ack_timeout_seconds": ACK_TIMEOUT_SECONDS, "tickets": tickets}
 
