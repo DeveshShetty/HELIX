@@ -55,6 +55,15 @@
   .why { display: block; font-size: 11px; color: var(--bad); margin-left: 2px; }
   .chatin { display: flex; gap: 8px; padding: 8px; border-top: 1px solid var(--line); background: #fff; flex-wrap: wrap; }
   .chatin input { flex: 1; min-width: 200px; }
+  .summaries { border-color: #c9d6fb; background: #f7f9ff; }
+  .sumhead { font-weight: 700; font-size: 15px; }
+  .sumitem { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+  .sumitem .top { font-size: 12px; color: var(--muted); }
+  .sumitem textarea { min-height: 70px; }
+  .checks { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chk { font-size: 12px; border-radius: 6px; padding: 2px 8px; }
+  .chk.ok { color: var(--ok); background: var(--ok-bg); }
+  .chk.bad { color: var(--bad); background: var(--bad-bg); }
   .err { color: var(--bad); font-size: 13px; }
 </style>
 </head>
@@ -128,18 +137,16 @@ function chatPanel(t) {
       await loadChat(t.ticket_id);
     };
     end.onclick = async () => {
-      end.disabled = true; end.textContent = 'Drafting summary…';
+      end.disabled = true; end.textContent = 'Ending chat…';
       try {
-        const d = await post(`/conversations/${c.cid}/close`, { responder_id: me.value });
-        drafts[t.ticket_id] = { summary: d.draft_summary, resolution: d.draft_fix, note: d.method };
-        openForms.add(t.ticket_id);
+        await post(`/conversations/${c.cid}/close`, { responder_id: me.value });
         await loadChat(t.ticket_id);
       } finally { refresh(true); }
     };
     row.append(box, send, end);
     panel.append(row);
   } else if (c.status === 'CLOSED') {
-    panel.append(el('div', 'line r-system', ' Chat ended. Review the drafted summary below, then resolve.'));
+    panel.append(el('div', 'line r-system', ' Chat ended. The Summariser is drafting a summary: it will appear under "Summaries to approve" at the top.'));
   }
   setTimeout(() => { log.scrollTop = log.scrollHeight; }, 0);
   return panel;
@@ -249,6 +256,46 @@ function renderTicket(t, now) {
   return card;
 }
 
+// ---------------------------------------------------------------- summaries to approve
+const sumEdits = {};   // draft_id -> { summary, resolution, kb } typed by the reviewer
+
+function renderSummaries(list) {
+  const box = el('div', 'card summaries');
+  box.append(el('div', 'sumhead', `Summaries to approve (${list.length})`),
+             el('div', 'hint', 'Drafted automatically by the Summariser from finished live chats. Check them, edit if needed, then approve to resolve the ticket.'));
+  for (const s of list) {
+    const e = sumEdits[s.draft_id] || (sumEdits[s.draft_id] = { summary: s.problem, resolution: s.fix, kb: true });
+    const item = el('div', 'sumitem');
+    item.append(el('div', 'top', `${s.draft_id} · ${s.ticket_id || 'no ticket'} · chat with ${s.agent_id || '?'} · drafted by ${s.method}`));
+    const checks = el('div', 'checks');
+    for (const c of s.checks) checks.append(el('span', 'chk ' + (c.ok ? 'ok' : 'bad'), (c.ok ? '✔ ' : '✖ ') + c.check.replace('_', ' ') + ': ' + c.detail));
+    const summary = el('input'); summary.value = e.summary; summary.placeholder = 'Problem summary';
+    const resolution = el('textarea'); resolution.value = e.resolution; resolution.placeholder = 'Fix (what the customer should do)';
+    const kbRow = el('label', 'hint');
+    const kb = el('input'); kb.type = 'checkbox'; kb.checked = e.kb;
+    kbRow.append(kb, ' Reusable answer: add to the knowledge base (untick for one-off issues)');
+    summary.oninput = resolution.oninput = kb.onchange = () => { Object.assign(e, { summary: summary.value, resolution: resolution.value, kb: kb.checked }); };
+    const err = el('div', 'err');
+    const approve = el('button', 'primary', '✔ Approve & resolve');
+    const reject = el('button', null, '✖ Reject');
+    approve.onclick = async () => {
+      err.textContent = '';
+      try { await post(`/summaries/${s.draft_id}/approve`, { responder_id: me.value, summary: summary.value, resolution: resolution.value, add_to_knowledge_base: kb.checked });
+            delete sumEdits[s.draft_id]; refresh(true); }
+      catch (x) { err.textContent = x.message; }
+    };
+    reject.onclick = async () => {
+      try { await post(`/summaries/${s.draft_id}/reject`, { responder_id: me.value, reason: 'rejected in console' });
+            delete sumEdits[s.draft_id]; refresh(true); }
+      catch (x) { err.textContent = x.message; }
+    };
+    const btns = el('div', 'actions'); btns.append(approve, reject);
+    item.append(checks, summary, resolution, kbRow, btns, err);
+    box.append(item);
+  }
+  return box;
+}
+
 async function refresh(force) {
   // don't redraw while typing (open chat panels update their own message list in place)
   if (!force && document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
@@ -263,6 +310,8 @@ async function refresh(force) {
     bar.append(chain, el('span', null, `· unacked pages escalate after ${d.ack_timeout_seconds}s`));
     if (d.source !== 'live') bar.append(el('span', 'warn-note', 'Showing ' + d.source));
     list.replaceChildren();
+    if (d.summaries === null) list.append(el('div', 'warn-note', 'Summariser service unreachable: summaries will appear when it is back.'));
+    else if (d.summaries.length) list.append(renderSummaries(d.summaries));
     if (!d.tickets.length) list.append(el('div', 'empty', 'No incidents. When the chat assistant escalates a question, it appears here.'));
     for (const t of d.tickets) list.append(renderTicket(t, d.now));
   } catch (e) {

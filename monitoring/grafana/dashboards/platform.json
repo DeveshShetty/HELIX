@@ -327,6 +327,15 @@
             "type": "prometheus",
             "uid": "prometheus"
           }
+        },
+        {
+          "refId": "C",
+          "expr": "sum by (model) (summariser_llm_cost_usd_total)",
+          "legendFormat": "summaries {{model}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         }
       ]
     },
@@ -659,6 +668,87 @@
           "refId": "A",
           "expr": "sum by (to, outcome) (rate(ticket_transitions_total[1m]) * 60)",
           "legendFormat": "{{to}} {{outcome}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "Summariser: drafts, checks failed, decisions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 16,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (method) (summaries_drafted_total)",
+          "legendFormat": "drafted {{method}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (check) (summary_checks_failed_total)",
+          "legendFormat": "check failed: {{check}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "sum by (decision, added_to_kb) (summaries_decided_total)",
+          "legendFormat": "{{decision}} (kb={{added_to_kb}})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "type": "stat",
+      "title": "Summaries waiting for approval",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 43,
+        "w": 8,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(summaries_pending)",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"

@@ -16,6 +16,8 @@ contribution statement must reflect who did what.
 - [x] Helix Cloud knowledge base: 39 articles (12 runbooks, 17 FAQs, 8 incidents, 2 poisoned); browsable at :8004
 - [x] 50-question test set, calibration curve, flip test (docs/EVIDENCE.md)
 - [x] Failure-injection demos (scripts/demo.py) and runbook (docs/RUNBOOK.md)
+- [x] Live hand-off to agents; stored conversations; personal-data removal; 'reusable answer' option
+- [x] Summariser service (5th): async drafts from conversation.closed, grounding/injection/PII checks, approval queue
 - [x] Dashboard: golden signals, AI cost/budget, resilience and consistency panels
 
 ## Proposal feedback (Dr Nag)

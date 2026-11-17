@@ -124,6 +124,21 @@ Bug found by the same test: a conversation that escalated twice only remembered 
 ticket, so the first ticket's transcript could not be found. Fixed with a
 `conversation_tickets` link table (backfilled from the decision log).
 
+## E9. Summariser service: few-shot prompt vs instructions only
+
+Same Kubernetes transcript (agent: "Kubernetes deployments are supported on the Team and
+Enterprise plans: go to Apps > New app > Deploy from Kubernetes manifest and upload your
+YAML file"), llama3.2:1b, temperature 0.1, 3 runs each:
+
+| prompt | format followed | content |
+|---|---|---|
+| instructions only | 0/3 | "The agent suggested the customer contact support team" (wrong) |
+| + one worked example (few-shot) | 3/3 | FIX = the agent's steps; grounding 100% each run |
+
+The few-shot FIX dropped "Team and Enterprise plans only": faithful but incomplete, one
+reason a person still approves every draft. Ending the chat now returns in ~50 ms
+(drafting moved off the request path); the draft appeared ~8 s later.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).

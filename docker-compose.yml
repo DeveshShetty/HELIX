@@ -55,6 +55,7 @@ services:
       DB_PATH: /data/oncall.db
       TICKETS_URL: http://tickets:8002
       CHAT_URL: http://chat:8001                        # conversations live in the Chat service
+      SUMMARISER_URL: http://summariser:8005            # drafts awaiting approval
       ACK_TIMEOUT_SECONDS: ${ACK_TIMEOUT_SECONDS:-30}   # unacked page -> next level after this
     volumes: [oncall_data:/data]
     ports: ["8003:8003"]           # on-call console: http://localhost:8003
@@ -67,6 +68,20 @@ services:
       DB_PATH: /data/knowledge.db
     volumes: [knowledge_data:/data]
     ports: ["8004:8004"]
+    depends_on: *depends-rabbit
+
+  summariser:
+    build: { context: ., dockerfile: services/summariser/Dockerfile }
+    environment:
+      <<: *service-env
+      DB_PATH: /data/summariser.db
+      TICKETS_URL: http://tickets:8002
+      LLM_MODE: ${LLM_MODE:-simulated}          # ollama => LLM drafts (grounding-checked)
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: [summariser_data:/data]
+    ports: ["8005:8005"]
     depends_on: *depends-rabbit
 
   prometheus:
@@ -93,3 +108,4 @@ volumes:
   tickets_data:
   oncall_data:
   knowledge_data:
+  summariser_data:

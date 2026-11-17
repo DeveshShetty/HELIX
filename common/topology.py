@@ -12,6 +12,7 @@ in its durable queue and are delivered when it comes back.
 QUEUES: dict[str, list[str]] = {
     "oncall.incident-lifecycle": ["incident.opened", "incident.acked", "incident.resolved", "incident.reopened"],
     "knowledge.incident-lifecycle": ["incident.resolved", "incident.reopened"],
+    "summariser.conversations": ["conversation.closed"],
 }
 
 

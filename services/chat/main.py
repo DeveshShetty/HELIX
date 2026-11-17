@@ -30,10 +30,11 @@ from prometheus_client import Counter, Gauge, Histogram
 from pydantic import BaseModel, Field
 
 from common.circuit_breaker import CircuitOpenError
-from common.db import start_daemon
+from common.db import relay_forever, start_daemon
 from common.observability import instrument
-from services.chat import clients, guard, llm
-from services.chat.conversations import ConversationStore, draft_summary
+from common import guard
+from services.chat import clients, llm
+from services.chat.conversations import ConversationStore
 from services.chat.store import DecisionStore
 
 SERVICE = "chat"
@@ -184,6 +185,7 @@ def escalation_worker() -> None:
 
 
 start_daemon(escalation_worker, name="chat-escalation-worker")
+start_daemon(relay_forever, DB_PATH, name="chat-outbox-relay")     # publishes conversation.closed
 
 
 def _escalate(d: dict, question: str, retrieved_ids: list[str], why: str) -> dict:
@@ -457,18 +459,16 @@ def get_conversation(cid: str, after: int = 0):
 
 @app.post("/conversations/{cid}/close")
 def close_conversation(cid: str, body: CloseIn):
-    """Agent ends the chat. Returns a DRAFT summary for the agent to review before it is resolved."""
+    """Agent ends the chat. The transcript goes to the Summariser service as an event;
+    a draft summary appears in the console's approval list shortly after."""
     conv = _conv_or_404(cid)
-    if conv["status"] != "CLOSED":
-        convs.add(cid, "system", "helix", f"{body.agent_id} ended the chat. Thanks for contacting Helix Cloud "
-                                          "support! You can keep asking me questions here.")
-    problem, fix, method = draft_summary(convs.messages(cid))
-    convs.set(cid, status="CLOSED", closed_at=time.time(), draft_summary=problem, draft_fix=fix)
+    closed = convs.close(cid, body.agent_id, f"{body.agent_id} ended the chat. Thanks for contacting Helix "
+                                             "Cloud support! You can keep asking me questions here.")
     _update_live_gauge()
-    print(f"[handoff] {cid} closed by {body.agent_id}; summary drafted ({method})", flush=True)
-    return {"conversation_id": cid, "ticket_id": conv["ticket_id"], "draft_summary": problem,
-            "draft_fix": fix, "method": method,
-            "note": "Draft only. Review and edit it before resolving: it is built from customer text."}
+    if closed:
+        print(f"[handoff] {cid} closed by {body.agent_id}; conversation.closed queued for the Summariser", flush=True)
+    return {"conversation_id": cid, "ticket_id": conv["ticket_id"], "status": "CLOSED",
+            "note": "A draft summary is being prepared and will appear under 'Summaries to approve'."}
 
 
 @app.get("/config")
