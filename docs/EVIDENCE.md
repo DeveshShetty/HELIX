@@ -8,7 +8,7 @@ These are facts; the interpretation and the decisions belong in the ADRs.
 `python eval/run_eval.py` on 50 labelled questions (30 covered, 8 near-miss,
 5 gap, 4 injection, 3 small talk). Output: `eval/results/threshold_curve.csv`, `.svg`.
 
-hash-v1, index rebuilt over all 35 seed documents (`hash-v1-20261117T184243`), 45 retrieval questions:
+hash-v1, index rebuilt over all 39 seed documents (`hash-v1-20261117T184243`), 45 retrieval questions:
 
 | threshold | answer rate | wrong-answer rate | false escalations |
 |---|---|---|---|
@@ -30,7 +30,7 @@ correct answers: below 2% wrong answers costs 12–19% of answerable questions.
 
 Same questions, same model (hash-v1), two index versions:
 
-| | index built at 4 docs, 31 added incrementally | index rebuilt over 35 docs |
+| | index built at 4 docs, 35 added incrementally | index rebuilt over 39 docs |
 |---|---|---|
 | answer rate at 0.40 | 94% | 100% |
 | "status page" confidence | 0.38 | 0.42 |

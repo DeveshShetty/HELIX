@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix Cloud Knowledge Base</title>
+<style>
+  :root { --bg: #f4f5f7; --panel: #fff; --ink: #1d2330; --muted: #6b7280; --line: #e3e6eb; --accent: #2f5bea;
+          --rb: #2f5bea; --faq: #16794c; --inc: #9a5b00; --learned: #6941c6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 14px 20px; }
+  header h1 { font-size: 17px; margin: 0 0 2px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  main { max-width: 900px; margin: 0 auto; padding: 18px 20px 40px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  input, select { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  input { flex: 1; min-width: 220px; }
+  .count { color: var(--muted); font-size: 13px; }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
+  summary { padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: baseline; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary .t { flex: 1; font-weight: 600; }
+  .kind { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; min-width: 74px; }
+  .k-runbook { color: var(--rb); } .k-faq { color: var(--faq); } .k-incident { color: var(--inc); }
+  .learned { font-size: 11px; font-weight: 700; color: var(--learned); }
+  .body { padding: 0 14px 12px; white-space: pre-wrap; border-top: 1px solid var(--line); padding-top: 10px; }
+  .meta { color: var(--muted); font-size: 12px; padding: 0 14px 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Helix Cloud Knowledge Base</h1>
+  <p>Everything the support assistant can answer from: how-to guides (runbooks), FAQs, and past incidents, including fixes it learned from resolved tickets.</p>
+</header>
+<main>
+  <div class="controls">
+    <input id="q" placeholder="Filter articles…">
+    <select id="kind">
+      <option value="">All types</option><option value="runbook">Runbooks</option>
+      <option value="faq">FAQs</option><option value="incident">Incidents</option>
+      <option value="learned">Learned from tickets</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="list"></div>
+</main>
+<script>
+let docs = [];
+const list = document.getElementById('list'), q = document.getElementById('q'), kind = document.getElementById('kind');
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+function render() {
+  const term = q.value.toLowerCase(), k = kind.value;
+  const shown = docs.filter(d => (!k || (k === 'learned' ? d.origin === 'incident' : d.source_type === k))
+    && (!term || (d.title + ' ' + d.tags + ' ' + d.text).toLowerCase().includes(term)));
+  list.replaceChildren();
+  for (const d of shown) {
+    const det = el('details'), sum = el('summary');
+    sum.append(el('span', 'kind k-' + d.source_type, d.source_type), el('span', 't', d.title));
+    if (d.origin === 'incident') sum.append(el('span', 'learned', 'learned · by ' + d.author));
+    det.append(sum, el('div', 'body', d.text),
+      el('div', 'meta', `id ${d.doc_id} · tags: ${d.tags || '-'} · updated ${new Date(d.updated_at * 1000).toLocaleString()}`));
+    list.append(det);
+  }
+  document.getElementById('count').textContent = `${shown.length} of ${docs.length} articles`;
+}
+fetch('/documents').then(r => r.json()).then(d => { docs = d; render(); });
+q.oninput = kind.onchange = render;
+</script>
+</body>
+</html>

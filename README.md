@@ -21,6 +21,7 @@ Runs fully offline at zero cost. All data is synthetic.
 |---|---|
 | **Chat app** | http://localhost:8001 |
 | **On-call console** | http://localhost:8003 |
+| Knowledge base (browse articles) | http://localhost:8004 |
 | Grafana dashboard | http://localhost:3000 |
 | RabbitMQ (guest / guest) | http://localhost:15672 |
 | Prometheus | http://localhost:9090 |
@@ -79,7 +80,7 @@ Set them in a `.env` file next to `docker-compose.yml`.
 ```
 common/              RabbitMQ helpers, topology, outbox, circuit breaker, metrics
 services/<name>/     one independently deployable service each
-services/knowledge/seed/   the Helix Cloud knowledge base (35 documents, synthetic)
+services/knowledge/seed/   the Helix Cloud knowledge base (39 articles, synthetic)
 eval/                labelled questions, calibration curve, flip test, results/
 scripts/             failure-injection demos, event replay
 monitoring/          Prometheus config, Grafana dashboard

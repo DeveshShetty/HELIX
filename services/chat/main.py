@@ -195,12 +195,13 @@ def _escalate(d: dict, question: str, retrieved_ids: list[str], why: str) -> dic
     tid = try_open_ticket(d["decision_id"], payload)
     if tid:
         d["ticket_id"] = tid
-        d["answer"] = f"{why} I've opened ticket {tid} and an on-call engineer will follow up."
+        d["answer"] = (f"{why} I've passed your question to our support team. "
+                       f"Your reference is {tid}, and an engineer will get back to you.")
     else:
         d["degraded"] = True
         d["escalation_pending"] = True
-        d["answer"] = (f"{why} Our ticket system is busy, but your request is saved (reference "
-                       f"{d['decision_id']}) and a ticket will be opened automatically.")
+        d["answer"] = (f"{why} Our support system is busy right now, but your question is saved "
+                       f"(reference {d['decision_id']}) and will reach the team automatically.")
     return d
 
 
@@ -236,7 +237,7 @@ def chat(body: ChatIn):
     # 1. direct prompt injection in the user's message
     if guard.looks_like_injection(question):
         d.update(decision="refused", reason="injection_detected",
-                 answer="I can't help with that request. I can only answer Helix Cloud support questions.")
+                 answer="Sorry, I can't help with that. I can answer questions about using Helix Cloud.")
         return _finish(d)
 
     # 2. greetings, thanks, vague messages: reply directly, no search, no ticket
@@ -251,18 +252,18 @@ def chat(body: ChatIn):
     DAILY_SPEND.set(cost_today)
     if cost_today >= DAILY_COST_CEILING_USD or tokens_today >= DAILY_TOKEN_CEILING:
         d["reason"] = "daily_budget_exhausted"
-        return _finish(_escalate(d, question, [], "I've reached today's automated-answer budget, so I won't guess."))
+        return _finish(_escalate(d, question, [], "I can't answer any more questions automatically today."))
 
     # 4. retrieve, behind deadline + retry budget + circuit breaker
     try:
         kb = clients.search_kb(question, TOP_K)
     except CircuitOpenError:
         d.update(reason="kb_unavailable", degraded=True)
-        return _finish(_escalate(d, question, [], "I can't search the knowledge base right now (circuit open), so I won't guess."))
+        return _finish(_escalate(d, question, [], "I'm having trouble looking that up right now, and I'd rather not guess."))
     except Exception as exc:
         print(f"[chat] knowledge search failed: {exc!r}", flush=True)
         d.update(reason="kb_unavailable", degraded=True)
-        return _finish(_escalate(d, question, [], "I can't search the knowledge base right now, so I won't guess."))
+        return _finish(_escalate(d, question, [], "I'm having trouble looking that up right now, and I'd rather not guess."))
 
     d["index_version"] = kb.get("index_version")
     d["embedding_model"] = kb.get("embedding_model")
@@ -273,7 +274,7 @@ def chat(body: ChatIn):
     if d["threshold"] is None:
         d["reason"] = "uncalibrated_model"
         return _finish(_escalate(d, question, [r["doc_id"] for r in results],
-                                 "My search model has changed and hasn't been calibrated yet, so I won't guess."))
+                                 "I'm being updated at the moment, and I'd rather not guess."))
 
     # 6. indirect injection: sanitise every retrieved passage
     passages = []
@@ -289,12 +290,13 @@ def chat(body: ChatIn):
         if len(content_terms(question)) <= 1:
             d.update(decision="answer", reason="needs_clarification", answer=CLARIFY)
             return _finish(d)
-        return _finish(_escalate(d, question, [], "I couldn't find anything about that in our knowledge base."))
+        return _finish(_escalate(d, question, [], "I don't have an answer for that yet."))
 
     # 7. confidence vs threshold (retrieval only: deterministic per index version)
     d["confidence"], _coverage = compute_confidence(question, passages[0])
     top = passages[0]
-    d["sources"] = [{"doc_id": top["doc_id"], "origin": top.get("origin"), "author": top.get("author"),
+    d["sources"] = [{"doc_id": top["doc_id"], "title": top.get("title"), "source_type": top.get("source_type"),
+                     "origin": top.get("origin"), "author": top.get("author"),
                      "embedding_model": top.get("embedding_model")}]
     if d["confidence"] < d["threshold"]:
         # One meaningful word that matches nothing ("hii", "asdf", "billing?") is too little
@@ -302,19 +304,19 @@ def chat(body: ChatIn):
         if len(content_terms(question)) <= 1:
             d.update(decision="answer", reason="needs_clarification", answer=CLARIFY)
             return _finish(d)
-        return _finish(_escalate(d, question, retrieved_ids, "I'm not confident I have the right answer for that."))
+        return _finish(_escalate(d, question, retrieved_ids, "I'm not sure I have the right answer for that, and I'd rather not guess."))
 
     # 8. per-query token budget
     if llm.prompt_tokens(question, top) > MAX_PROMPT_TOKENS:
         d["reason"] = "token_budget_exceeded"
-        return _finish(_escalate(d, question, retrieved_ids, "That needs more context than I'm allowed to use per question."))
+        return _finish(_escalate(d, question, retrieved_ids, "That question needs more detail than I can handle on my own."))
 
     # 9. grounded answer from the top passage
     gen = llm.generate(question, passages[:1])
     _account(d, gen)
     if guard.looks_like_injection(gen["text"]):
         d["reason"] = "unsafe_output"
-        return _finish(_escalate(d, question, retrieved_ids, "I couldn't produce a safe, grounded answer."))
+        return _finish(_escalate(d, question, retrieved_ids, "I couldn't put together a reliable answer for that."))
     d.update(decision="answer", reason="grounded", answer=gen["text"],
              citations=[top["doc_id"]], degraded=gen["fallback"])
     return _finish(d)

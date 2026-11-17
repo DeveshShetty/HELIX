@@ -13,7 +13,7 @@ contribution statement must reflect who did what.
 - [x] Knowledge Base: hash-v1 + nomic-embed-text embedders, versioned index, blue/green rebuild,
       idempotent revision-ordered consumer, withdrawal on reopen, embedding cost
 - [x] On-Call: roster with optimistic concurrency, durable ack timers, escalation chain, console
-- [x] Helix Cloud knowledge base: 35 documents incl. 2 poisoned
+- [x] Helix Cloud knowledge base: 39 articles (12 runbooks, 17 FAQs, 8 incidents, 2 poisoned); browsable at :8004
 - [x] 50-question test set, calibration curve, flip test (docs/EVIDENCE.md)
 - [x] Failure-injection demos (scripts/demo.py) and runbook (docs/RUNBOOK.md)
 - [x] Dashboard: golden signals, AI cost/budget, resilience and consistency panels

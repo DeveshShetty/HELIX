@@ -68,7 +68,9 @@ def _simulated(passages: list[dict]) -> str:
     body = re.sub(r"\n{3,}", "\n\n", top["text"]).strip()
     if len(body) > MAX_ANSWER_CHARS:
         body = body[:MAX_ANSWER_CHARS].rsplit(" ", 1)[0] + " …"
-    return f'According to "{top["title"]}":\n\n{body}'
+    if top.get("source_type") == "incident":
+        return f"Our team solved a similar issue before:\n\n{body}"
+    return f'From our help article "{top["title"]}":\n\n{body}'
 
 
 def generate(question: str, passages: list[dict]) -> dict:

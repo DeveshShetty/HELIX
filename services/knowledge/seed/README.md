@@ -17,7 +17,7 @@ tags: payments, api, 502, gateway
 Body text in plain markdown...
 ```
 
-Contents: 12 runbooks, 16 FAQs, 8 past incidents, 2 poisoned documents. Written so that some
+Contents: 12 runbooks, 17 FAQs, 8 past incidents, 2 poisoned documents (39). Browse the live knowledge base, including fixes learned from tickets, at http://localhost:8004. Written so that some
 questions are clearly covered, some are near misses (similar words, different
 problem), and some topics are deliberately missing (gaps); see
 `eval/questions.jsonl`.

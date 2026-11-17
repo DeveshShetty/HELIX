@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from prometheus_client import Counter, Gauge
 from pydantic import BaseModel, Field
 
@@ -453,6 +454,23 @@ def index_info():
 def add_document(body: DocumentIn):
     index_document(body.model_dump(), "api")
     return {"doc_id": body.doc_id, "index_version": _cache["version"]}
+
+
+@app.get("/documents")
+def list_documents():
+    """Every article currently in the knowledge base (seed files + learned from resolved tickets)."""
+    conn = connect(DB_PATH)
+    try:
+        rows = conn.execute("SELECT doc_id, title, source_type, tags, text, origin, author, updated_at "
+                            "FROM documents ORDER BY source_type, title").fetchall()
+    finally:
+        conn.close()
+    return [dict(r) for r in rows]
+
+
+@app.get("/", include_in_schema=False)
+def browse():
+    return FileResponse(Path(__file__).parent / "static" / "browse.html")
 
 
 @app.get("/documents/{doc_id}")
