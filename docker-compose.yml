@@ -1,0 +1,84 @@
+# One-command startup:  docker compose up --build
+x-service-env: &service-env
+  RABBIT_HOST: rabbitmq
+  RABBIT_EXCHANGE: support.events
+
+x-depends-rabbit: &depends-rabbit
+  rabbitmq:
+    condition: service_healthy
+
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    hostname: rabbitmq   # stable node name so the data volume survives restarts
+    ports: ["5672:5672", "15672:15672"]   # UI: http://localhost:15672 (guest/guest)
+    volumes: [rabbitmq_data:/var/lib/rabbitmq]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  chat:
+    build: { context: ., dockerfile: services/chat/Dockerfile }
+    environment:
+      <<: *service-env
+      DB_PATH: /data/chat.db
+      KNOWLEDGE_URL: http://knowledge:8004
+      TICKETS_URL: http://tickets:8002
+    volumes: [chat_data:/data]
+    ports: ["8001:8001"]
+    depends_on: *depends-rabbit
+
+  tickets:
+    build: { context: ., dockerfile: services/tickets/Dockerfile }
+    environment:
+      <<: *service-env
+      DB_PATH: /data/tickets.db
+    volumes: [tickets_data:/data]
+    ports: ["8002:8002"]
+    depends_on: *depends-rabbit
+
+  oncall:
+    build: { context: ., dockerfile: services/oncall/Dockerfile }
+    environment:
+      <<: *service-env
+      DB_PATH: /data/oncall.db
+      TICKETS_URL: http://tickets:8002
+    volumes: [oncall_data:/data]
+    ports: ["8003:8003"]
+    depends_on: *depends-rabbit
+
+  knowledge:
+    build: { context: ., dockerfile: services/knowledge/Dockerfile }
+    environment:
+      <<: *service-env
+      DB_PATH: /data/knowledge.db
+    volumes: [knowledge_data:/data]
+    ports: ["8004:8004"]
+    depends_on: *depends-rabbit
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/platform.json
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  rabbitmq_data:
+  chat_data:
+  tickets_data:
+  oncall_data:
+  knowledge_data:
