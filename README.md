@@ -31,7 +31,7 @@ Stop: `docker compose down` · wipe all data: `docker compose down -v`
 ## Try it
 
 1. Chat app: click the example questions (answered, escalated, poisoned document, injection).
-2. Ask something it can't answer, e.g. *"how do I export invoices as csv"*: it opens a ticket.
+2. Ask something it can't answer, e.g. *"do you offer a student discount"*: it opens a ticket.
 3. On-call console: watch the page escalate (alice → bob → carol every 30 s), **Ack**, then
    **Resolve** with a summary and fix.
 4. Ask the same question again: answered, citing the resolved incident.

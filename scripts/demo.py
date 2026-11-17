@@ -95,7 +95,7 @@ def kb_slow():
 def tickets_down():
     step("docker compose stop tickets, then ask something the KB cannot answer")
     compose("stop", "tickets")
-    r = chat("do you offer a student discount")
+    r = chat("are you hipaa compliant")
     print(f"    user sees: {r['answer']}")
     print("    escalations waiting:", call("GET", CHAT + "/config")["escalations_pending"])
     step("docker compose start tickets: the chat outbox worker delivers the escalation")
@@ -162,7 +162,7 @@ def duplicate():
 
 
 def loop():
-    q = "how do I export invoices as csv"
+    q = "do you offer a student discount"
     step(f"Ask: {q!r}")
     r = chat(q)
     tid = r.get("ticket_id")
@@ -174,14 +174,14 @@ def loop():
     step(f"{page['responder_id']} acks {page['page_id']}, then resolves with a staff-written summary")
     call("POST", f"{ONCALL}/pages/{page['page_id']}/ack", {"responder_id": page["responder_id"]})
     call("POST", f"{ONCALL}/incidents/{tid}/resolve", {
-        "responder_id": page["responder_id"], "summary": "Exporting invoices to CSV",
-        "resolution": "Go to Billing > Invoices, select the invoices, then click Export > CSV."})
+        "responder_id": page["responder_id"], "summary": "Student discount for the Team plan",
+        "resolution": "Students get 50% off the Team plan. Sign up with a university email, then apply under Billing > Discounts."})
     time.sleep(4)
     step("Ask again: answered from the re-indexed resolution")
     r = chat(q)
     print(f"    source: {r['citations']} by {r['sources'][0]['author'] if r['sources'] else '-'}")
     step("The fix was wrong: reopen the ticket -> Knowledge withdraws it -> escalates again")
-    call("POST", f"{ONCALL}/incidents/{tid}/reopen", {"responder_id": "carol", "reason": "export button missing"})
+    call("POST", f"{ONCALL}/incidents/{tid}/reopen", {"responder_id": "carol", "reason": "discount programme has ended"})
     time.sleep(4)
     chat(q)
 
