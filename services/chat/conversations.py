@@ -23,6 +23,7 @@ import time
 import httpx
 
 from common.db import connect
+from common.redact import redact
 from services.chat import llm
 
 DDL = """
@@ -47,6 +48,11 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at      REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS messages_by_conv ON messages(conversation_id, seq);
+CREATE TABLE IF NOT EXISTS conversation_tickets (   -- one conversation can escalate more than once
+  ticket_id       TEXT PRIMARY KEY,
+  conversation_id TEXT NOT NULL,
+  linked_at       REAL NOT NULL
+);
 """
 
 SUMMARY_PROMPT = (
@@ -62,6 +68,9 @@ class ConversationStore:
         self.db_path = db_path
         conn = connect(db_path)
         conn.executescript(DDL)
+        # backfill links for tickets raised before conversation_tickets existed (decision log has both ids)
+        conn.execute("""INSERT OR IGNORE INTO conversation_tickets(ticket_id, conversation_id, linked_at)
+                        SELECT ticket_id, conversation_id, created_at FROM decisions WHERE ticket_id IS NOT NULL""")
         conn.close()
 
     def _q(self, sql: str, args: tuple = (), one: bool = False):
@@ -112,9 +121,17 @@ class ConversationStore:
         return self._q(f"SELECT * FROM conversations WHERE status IN ({marks}) ORDER BY updated_at DESC",
                        tuple(statuses))
 
+    def link_ticket(self, cid: str, ticket_id: str) -> None:
+        """Remember every ticket a conversation raised; conversations.ticket_id is the latest."""
+        self._q("INSERT OR IGNORE INTO conversation_tickets(ticket_id, conversation_id, linked_at) VALUES (?,?,?)",
+                (ticket_id, cid, time.time()))
+        self.set(cid, ticket_id=ticket_id)
+
     def by_ticket(self, ticket_id: str) -> dict | None:
-        return self._q("SELECT * FROM conversations WHERE ticket_id=? ORDER BY updated_at DESC",
-                       (ticket_id,), one=True)
+        link = self._q("SELECT conversation_id FROM conversation_tickets WHERE ticket_id=?", (ticket_id,), one=True)
+        if link:
+            return self.get(link["conversation_id"])
+        return self._q("SELECT * FROM conversations WHERE ticket_id=?", (ticket_id,), one=True)   # pre-link data
 
 
 # ------------------------------------------------------------------ summary drafting
@@ -125,7 +142,23 @@ def transcript_text(msgs: list[dict]) -> str:
 
 
 def draft_summary(msgs: list[dict]) -> tuple[str, str, str]:
-    """(problem, fix, method). Ollama if enabled, otherwise extractive. Always a draft for review."""
+    """(problem, fix, method) with personal data removed. Always a draft for the agent to review."""
+    problem, fix, method = _draft(msgs)
+    problem, n1 = redact(problem)
+    fix, n2 = redact(fix)
+    if n1 + n2:
+        method += f", {n1 + n2} personal detail(s) removed"
+    return problem, fix, method
+
+
+def _is_substantive(line: str) -> bool:
+    """Agent lines worth keeping in a fix: not greetings, questions or 'one moment' filler."""
+    words = re.findall(r"[a-z0-9']+", line.lower())
+    return len(words) >= 8 and not line.rstrip().endswith("?")
+
+
+def _draft(msgs: list[dict]) -> tuple[str, str, str]:
+    """Ollama if enabled and well-formed, otherwise extractive."""
     if llm.LLM_MODE == "ollama":
         try:
             r = httpx.post(f"{llm.OLLAMA_URL}/api/chat", timeout=llm.OLLAMA_TIMEOUT, json={
@@ -148,5 +181,5 @@ def draft_summary(msgs: list[dict]) -> tuple[str, str, str]:
         before = [m for m in msgs if m["role"] == "user" and m["seq"] < stuck["seq"]]
         question = before[-1]["text"] if before else None
     question = question or next((m["text"] for m in msgs if m["role"] == "user"), "")
-    agent_lines = [m["text"] for m in msgs if m["role"] == "agent"]
+    agent_lines = [m["text"] for m in msgs if m["role"] == "agent" and _is_substantive(m["text"])]
     return question[:200], "\n".join(agent_lines), "extractive draft"

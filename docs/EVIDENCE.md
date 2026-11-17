@@ -112,6 +112,18 @@ format check rejected it and the extractive draft (customer question + agent's w
 used. The draft is never indexed directly: alice edited it and resolved, and a new customer
 asking "can I be invoiced in yen?" was answered from her reviewed text.
 
+Hands-on test (T-000008): a customer typed a phone number in the live chat and the issue was
+a one-off (a late order). The extractive draft kept only the question and the agent's
+substantive line (no greetings, no phone number). The agent resolved it with "reusable
+answer" unticked, and Knowledge recorded it as `not reusable, not indexed`. Separately, a
+reusable resolution containing `+353 87 123 4567` and an email was indexed as
+`[phone number removed]` / `[email removed]` (`common/redact.py`, applied at drafting and
+again at ingestion).
+
+Bug found by the same test: a conversation that escalated twice only remembered its latest
+ticket, so the first ticket's transcript could not be found. Fixed with a
+`conversation_tickets` link table (backfilled from the decision log).
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).
@@ -119,5 +131,6 @@ asking "can I be invoiced in yen?" was answered from her reviewed text.
 - Injection detection is pattern-based; it is one layer, not a guarantee.
 - Daily budget is enforced per Chat instance (SQLite); several replicas would need a shared counter.
 - All prices are notional; local models cost nothing to run.
+- Personal-data removal is pattern-based (phone, email, card); names and addresses are not detected.
 - Live chat uses polling (1.5 s), not WebSockets; fine for a demo, not for thousands of chats.
 - The customer is not notified when a ticket they did not chat about is resolved.

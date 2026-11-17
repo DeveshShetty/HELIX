@@ -117,6 +117,8 @@ class ResolveIn(BaseModel):
     responder_id: str = Field(min_length=1)
     summary: str = Field(min_length=5, max_length=200)     # staff-written description of the problem
     resolution: str = Field(min_length=5)
+    # False for one-off issues (e.g. "your order is late"): resolved, but not reusable knowledge
+    add_to_knowledge_base: bool = True
 
 
 class ReopenIn(BaseModel):
@@ -251,7 +253,8 @@ def resolve(ticket_id: str, body: ResolveIn):
                         "resolved_by": body.responder_id, "resolved_at": now},
                        "incident.resolved",
                        {"summary": body.summary, "resolution": body.resolution,
-                        "resolved_by": body.responder_id, "resolved_at": now},
+                        "resolved_by": body.responder_id, "resolved_at": now,
+                        "add_to_knowledge_base": body.add_to_knowledge_base},
                        bump_revision=True)
 
 

@@ -225,6 +225,7 @@ class ResolveIn(BaseModel):
     responder_id: str = Field(min_length=1)
     summary: str = Field(min_length=5, max_length=200)
     resolution: str = Field(min_length=5)
+    add_to_knowledge_base: bool = True
 
 
 class ReopenIn(BaseModel):

@@ -59,7 +59,7 @@ Upsert by `doc_id` (idempotent).
 ### Consumes
 | Event | Action |
 |---|---|
-| `incident.resolved` | Upsert `inc-<ticket_id>` from the **staff-written** `summary` + `resolution` only |
+| `incident.resolved` | Upsert `inc-<ticket_id>` from the **staff-written** `summary` + `resolution` only, with personal data removed; skipped if `add_to_knowledge_base` is false |
 | `incident.reopened` | Withdraw `inc-<ticket_id>` from every index version |
 
 Idempotent on `event_id`; ordered by ticket `revision` (an older revision is
@@ -93,7 +93,8 @@ Every resolve and reopen increments `revision`.
   "resolution": "Go to Billing > Invoices …" }
 ```
 `summary` is written by the responder. It replaces the user's question in
-everything that gets re-indexed.
+everything that gets re-indexed. Optional `"add_to_knowledge_base": false` resolves a
+one-off issue without indexing it (default `true`).
 
 ### `POST /tickets/{id}/reopen`
 ```json
@@ -210,7 +211,7 @@ At-least-once; every consumer dedupes on `event_id`.
 |---|---|---|---|
 | `incident.opened` | Tickets | On-Call | `ticket_id, revision, title, question, severity, created_at` |
 | `incident.acked` | Tickets | On-Call | `ticket_id, revision, responder_id, acked_at` |
-| `incident.resolved` | Tickets | Knowledge, On-Call | `ticket_id, revision, summary, resolution, resolved_by, resolved_at` |
+| `incident.resolved` | Tickets | Knowledge, On-Call | `ticket_id, revision, summary, resolution, resolved_by, resolved_at, add_to_knowledge_base` |
 | `incident.reopened` | Tickets | Knowledge, On-Call | `ticket_id, revision, reopened_by, reason, reopened_at` |
 
 Queues and bindings are declared by every service at startup from

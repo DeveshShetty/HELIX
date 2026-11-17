@@ -217,15 +217,24 @@ function renderTicket(t, now) {
     const resolution = el('textarea'); resolution.placeholder = 'Resolution: the fix, in steps a customer can follow';
     const d = drafts[t.ticket_id] || {};
     summary.value = d.summary || ''; resolution.value = d.resolution || '';
-    summary.oninput = resolution.oninput = () => { drafts[t.ticket_id] = { summary: summary.value, resolution: resolution.value }; };
+    const kbRow = el('label', 'hint');
+    const kb = el('input'); kb.type = 'checkbox'; kb.checked = d.kb !== false;
+    kbRow.append(kb, ' Reusable answer: add to the knowledge base so the assistant can answer this next time ' +
+                     '(untick for one-off issues, e.g. a single late order)');
+    const submit = el('button', 'primary');
+    const label = () => { submit.textContent = kb.checked ? 'Resolve and add to knowledge base' : 'Resolve (not added to knowledge base)'; };
+    label();
+    const save = () => { drafts[t.ticket_id] = { ...drafts[t.ticket_id], summary: summary.value, resolution: resolution.value, kb: kb.checked }; };
+    summary.oninput = resolution.oninput = save;
+    kb.onchange = () => { save(); label(); };
     const hint = el('div', 'hint', d.note
-      ? `Pre-filled from the chat (${d.note}). It is built from what the customer wrote: check and edit it before resolving. Only this reviewed text is added to the knowledge base.`
+      ? `Pre-filled from the chat (${d.note}). It is built from the conversation: check and edit it before resolving. Personal details are removed automatically, but read it anyway.`
       : 'Only your summary and resolution are added to the knowledge base, never the customer’s original message.');
-    const submit = el('button', 'primary', 'Resolve and add to knowledge base');
     submit.type = 'submit';
-    form.append(summary, resolution, hint, submit);
+    form.append(summary, resolution, hint, kbRow, submit);
     form.onsubmit = (e) => { e.preventDefault(); run(async () => {
-      await post(`/incidents/${t.ticket_id}/resolve`, { responder_id: me.value, summary: summary.value, resolution: resolution.value });
+      await post(`/incidents/${t.ticket_id}/resolve`, { responder_id: me.value, summary: summary.value,
+                 resolution: resolution.value, add_to_knowledge_base: kb.checked });
       openForms.delete(t.ticket_id); delete drafts[t.ticket_id];
     }); };
     b.onclick = () => { openForms.has(t.ticket_id) ? openForms.delete(t.ticket_id) : openForms.add(t.ticket_id); form.classList.toggle('open'); };

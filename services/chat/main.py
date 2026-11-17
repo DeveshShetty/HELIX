@@ -165,7 +165,7 @@ def try_open_ticket(decision_id: str, payload: dict) -> str | None:
         return None
     store.escalation_done(decision_id, t["ticket_id"])
     if payload.get("conversation_id"):
-        convs.set(payload["conversation_id"], ticket_id=t["ticket_id"])
+        convs.link_ticket(payload["conversation_id"], t["ticket_id"])
     return t["ticket_id"]
 
 
@@ -351,7 +351,7 @@ def _finish(d: dict) -> dict:
     if not d.get("dry_run"):
         convs.add(d["conversation_id"], "bot", "helix", d["answer"], d["decision_id"])
         if d["ticket_id"]:
-            convs.set(d["conversation_id"], ticket_id=d["ticket_id"])
+            convs.link_ticket(d["conversation_id"], d["ticket_id"])
     print(f"[decision] {d['decision_id']} {d['decision']}/{d['reason']} conf={d['confidence']} "
           f"thr={d['threshold']} emb={d['embedding_model']} ticket={d['ticket_id']}", flush=True)
     return {k: v for k, v in d.items() if k != "message"}
@@ -412,7 +412,7 @@ def handoff(cid: str):
         return conv
     if not conv["ticket_id"]:
         raise HTTPException(409, "no ticket for this conversation yet")
-    convs.set(cid, status="WAITING_AGENT")
+    convs.set(cid, status="WAITING_AGENT", agent_id=None)   # a new hand-off starts without an agent
     convs.add(cid, "system", "helix", f"Connecting you to a support agent (reference {conv['ticket_id']}). "
                                       "Please keep this window open; they'll join here shortly.")
     HANDOFFS.inc()

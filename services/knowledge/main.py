@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
+from common.redact import redact
 from services.knowledge import embedders
 
 SERVICE = "knowledge"
@@ -366,13 +367,32 @@ def handle_incident_event(event: dict) -> None:
     if not data.get("resolution") or not data.get("summary"):
         EVENTS_CONSUMED.labels(SERVICE, etype, "error").inc()
         raise ValueError("incident.resolved needs summary and resolution")
-    # Only staff-written fields are ingested. The user's question is deliberately NOT indexed.
+
+    if data.get("add_to_knowledge_base") is False:
+        # A one-off resolution ("your order is late"): resolved, but not reusable knowledge.
+        conn = connect(DB_PATH)
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            mark_processed(conn, event["event_id"])
+            conn.execute("COMMIT")
+        finally:
+            conn.close()
+        EVENTS_CONSUMED.labels(SERVICE, etype, "skipped").inc()
+        print(f"[ingest] {ticket_id} resolved (rev {revision}): not reusable, not indexed", flush=True)
+        return
+
+    # Only staff-written fields are ingested; the user's question is deliberately NOT indexed.
+    # Personal data is removed again here (defence in depth: the console draft is redacted too).
+    summary, n1 = redact(data["summary"])
+    resolution, n2 = redact(data["resolution"])
+    if n1 + n2:
+        print(f"[ingest] {ticket_id}: removed {n1 + n2} personal detail(s) before indexing", flush=True)
     doc = {
         "doc_id": f"inc-{ticket_id}",
-        "title": f"{ticket_id}: {data['summary']}"[:200],
+        "title": f"{ticket_id}: {summary}"[:200],
         "source_type": "incident",
         "tags": "resolved incident",
-        "text": f"Problem: {data['summary']}\n\nResolution: {data['resolution']}",
+        "text": f"Problem: {summary}\n\nResolution: {resolution}",
         "author": data.get("resolved_by", "on-call"),
     }
     outcome = index_document(doc, "incident", event_id=event["event_id"], ticket_revision=(ticket_id, revision))
