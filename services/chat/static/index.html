@@ -295,6 +295,7 @@ async function ask(text) {
   document.getElementById('empty')?.remove();
   thread.append(el('div', 'msg user', text));
   const typing = el('div', 'msg bot typing', 'Looking that up…');
+  const slow = setTimeout(() => { typing.textContent = 'Still writing your answer… (the AI model runs on this computer and can take up to 20 seconds)'; }, 3000);
   thread.append(typing);
   scrollDown();
   input.value = ''; send.disabled = true;
@@ -311,7 +312,7 @@ async function ask(text) {
   } catch (e) {
     typing.replaceWith(el('div', 'msg bot', "Sorry, I can't reach our support system right now. Please try again in a minute."));
   } finally {
-    send.disabled = false; input.focus(); scrollDown(); refreshStatus();
+    clearTimeout(slow); send.disabled = false; input.focus(); scrollDown(); refreshStatus();
   }
 }
 

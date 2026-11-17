@@ -18,6 +18,10 @@ LLM_MODE = os.getenv("LLM_MODE", "simulated")            # simulated | ollama
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://host.docker.internal:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
 OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "30"))
+# Keep the model loaded between questions (Ollama unloads it after 5 idle minutes by default,
+# making the next answer wait for a reload) and cap answer length to bound latency.
+OLLAMA_KEEP_ALIVE = os.getenv("OLLAMA_KEEP_ALIVE", "30m")
+OLLAMA_MAX_TOKENS = int(os.getenv("OLLAMA_MAX_TOKENS", "200"))
 PRICE_PROMPT_PER_1K = float(os.getenv("PRICE_PROMPT_PER_1K", "0.00015"))
 PRICE_COMPLETION_PER_1K = float(os.getenv("PRICE_COMPLETION_PER_1K", "0.0006"))
 MAX_ANSWER_CHARS = 900
@@ -86,7 +90,8 @@ def generate(question: str, passages: list[dict]) -> dict:
     if LLM_MODE == "ollama":
         try:
             r = httpx.post(f"{OLLAMA_URL}/api/chat", timeout=OLLAMA_TIMEOUT, json={
-                "model": OLLAMA_MODEL, "stream": False, "options": {"temperature": 0.2},
+                "model": OLLAMA_MODEL, "stream": False, "keep_alive": OLLAMA_KEEP_ALIVE,
+                "options": {"temperature": 0.2, "num_predict": OLLAMA_MAX_TOKENS},
                 "messages": [{"role": "system", "content": SYSTEM_PROMPT},
                              {"role": "user", "content": user_msg}]})
             r.raise_for_status()

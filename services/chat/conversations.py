@@ -162,7 +162,8 @@ def _draft(msgs: list[dict]) -> tuple[str, str, str]:
     if llm.LLM_MODE == "ollama":
         try:
             r = httpx.post(f"{llm.OLLAMA_URL}/api/chat", timeout=llm.OLLAMA_TIMEOUT, json={
-                "model": llm.OLLAMA_MODEL, "stream": False, "options": {"temperature": 0.1},
+                "model": llm.OLLAMA_MODEL, "stream": False, "keep_alive": llm.OLLAMA_KEEP_ALIVE,
+                "options": {"temperature": 0.1, "num_predict": 150},
                 "messages": [{"role": "system", "content": SUMMARY_PROMPT},
                              {"role": "user", "content": f"<transcript>\n{transcript_text(msgs)}\n</transcript>"}]})
             r.raise_for_status()
