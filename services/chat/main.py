@@ -49,6 +49,9 @@ MAX_PROMPT_TOKENS = int(os.getenv("MAX_PROMPT_TOKENS", "1500"))          # per q
 DAILY_TOKEN_CEILING = int(os.getenv("DAILY_TOKEN_CEILING", "200000"))     # per UTC day
 DAILY_COST_CEILING_USD = float(os.getenv("DAILY_COST_CEILING_USD", "0.50"))
 
+# Pages are small and change with every release: never let a browser serve a stale copy.
+NO_CACHE = {"Cache-Control": "no-store"}
+
 app = FastAPI(title="Chat / RAG Support Service")
 instrument(app, SERVICE)
 store = DecisionStore(DB_PATH)
@@ -490,4 +493,4 @@ def health():
 
 @app.get("/", include_in_schema=False)
 def ui():
-    return FileResponse(Path(__file__).parent / "static" / "index.html")
+    return FileResponse(Path(__file__).parent / "static" / "index.html", headers=NO_CACHE)

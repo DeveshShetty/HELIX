@@ -88,6 +88,9 @@ EMBED_COST = Counter("embedding_cost_usd_total", "Notional embedding cost in USD
 # Notional price, as if nomic-embed-text were a hosted embedding API. hash-v1 is free (local arithmetic).
 EMBED_PRICE_PER_1K = {"hash-v1": 0.0, "nomic-embed-text": float(os.getenv("PRICE_EMBED_PER_1K", "0.00002"))}
 
+# Pages are small and change with every release: never let a browser serve a stale copy.
+NO_CACHE = {"Cache-Control": "no-store"}
+
 app = FastAPI(title="Knowledge Base / Ingestion Service")
 instrument(app, SERVICE)
 
@@ -490,7 +493,7 @@ def list_documents():
 
 @app.get("/", include_in_schema=False)
 def browse():
-    return FileResponse(Path(__file__).parent / "static" / "browse.html")
+    return FileResponse(Path(__file__).parent / "static" / "browse.html", headers=NO_CACHE)
 
 
 @app.get("/documents/{doc_id}")

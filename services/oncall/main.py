@@ -73,6 +73,9 @@ ESCALATIONS = Counter("escalations_total", "Pages that timed out and escalated",
 PAGES_PENDING = Gauge("pages_pending", "Pages waiting for an ack")
 ACKS = Counter("page_acks_total", "Page acks", ["outcome"])
 
+# Pages are small and change with every release: never let a browser serve a stale copy.
+NO_CACHE = {"Cache-Control": "no-store"}
+
 app = FastAPI(title="On-Call & Escalation Service")
 instrument(app, SERVICE)
 
@@ -414,4 +417,4 @@ def health():
 
 @app.get("/", include_in_schema=False)
 def console():
-    return FileResponse(Path(__file__).parent / "static" / "console.html")
+    return FileResponse(Path(__file__).parent / "static" / "console.html", headers=NO_CACHE)
