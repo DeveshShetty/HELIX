@@ -113,8 +113,8 @@ def transcript_text(msgs: list[dict]) -> str:
     return "\n".join(f"{who[m['role']]}: {m['text']}" for m in msgs if m["role"] in who)
 
 
-def llm_draft(msgs: list[dict]) -> tuple[str, str] | None:
-    """Ask Ollama for PROBLEM/FIX. None if it fails or ignores the format."""
+def llm_draft(msgs: list[dict]) -> tuple[tuple[str, str] | None, str]:
+    """Ask Ollama for PROBLEM/FIX. Returns ((problem, fix) or None if the format was ignored, raw text)."""
     user_msg = f"<transcript>\n{transcript_text(msgs)}\n</transcript>"
     r = httpx.post(f"{OLLAMA_URL}/api/chat", timeout=OLLAMA_TIMEOUT, json={
         "model": OLLAMA_MODEL, "stream": False, "keep_alive": "30m",
@@ -133,8 +133,8 @@ def llm_draft(msgs: list[dict]) -> tuple[str, str] | None:
     problem = re.search(r"PROBLEM\s*:\s*(.+)", out, re.I)
     fix = re.search(r"(?:FIX|SOLUTION|RESOLUTION)\s*:\s*(.+)", out, re.I | re.S)
     if not (problem and fix):
-        return None
-    return problem.group(1).strip()[:200], fix.group(1).strip()
+        return None, out.strip()
+    return (problem.group(1).strip()[:200], fix.group(1).strip()), out.strip()
 
 
 def grounding(fix: str, agent_text: str) -> float:
@@ -143,17 +143,23 @@ def grounding(fix: str, agent_text: str) -> float:
     return len(words & set(_WORD.findall(agent_text.lower()))) / len(words) if words else 0.0
 
 
-def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict]]:
-    """(problem, fix, method, checks)."""
+def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict], dict | None]:
+    """(problem, fix, method, checks, llm_alternative).
+
+    llm_alternative is the AI's draft when it was NOT used (wrong format or failed
+    grounding), redacted, so the reviewer can see what it said and decide.
+    """
     checks: list[dict] = []
+    alt: dict | None = None
     agent_text = " ".join(m["text"] for m in msgs if m["role"] == "agent")
     problem, fix, method = None, None, "extractive"
 
     if LLM_MODE == "ollama":
         try:
-            got = llm_draft(msgs)
+            got, raw = llm_draft(msgs)
             if got is None:
                 checks.append({"check": "llm_format", "ok": False, "detail": "LLM ignored the PROBLEM/FIX format"})
+                alt = {"problem": None, "fix": redact(raw)[0], "grounding": None, "why": "wrong format"}
             else:
                 g = grounding(got[1], agent_text)
                 if g >= GROUNDING_MIN:
@@ -162,6 +168,8 @@ def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict]]:
                 else:
                     checks.append({"check": "grounding", "ok": False,
                                    "detail": f"LLM draft rejected: only {g:.0%} of it is in the agent's words"})
+                    alt = {"problem": redact(got[0])[0], "fix": redact(got[1])[0], "grounding": round(g, 2),
+                           "why": f"only {g:.0%} of it matches what the agent said"}
         except Exception as exc:
             checks.append({"check": "llm_available", "ok": False, "detail": f"LLM unavailable ({type(exc).__name__})"})
     if fix is None:
@@ -181,7 +189,7 @@ def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict]]:
     for c in checks:
         if not c["ok"]:
             CHECKS_FAILED.labels(c["check"]).inc()
-    return problem, fix, method, checks
+    return problem, fix, method, checks, alt
 
 
 # ------------------------------------------------------------------ consumer
@@ -199,7 +207,7 @@ def handle_conversation_closed(event: dict) -> None:
     finally:
         conn.close()
 
-    problem, fix, method, checks = draft(msgs)          # may call the LLM: outside any transaction
+    problem, fix, method, checks, alt = draft(msgs)     # may call the LLM: outside any transaction
 
     conn = connect(DB_PATH)
     try:
@@ -209,9 +217,9 @@ def handle_conversation_closed(event: dict) -> None:
             return
         cur = conn.execute(
             """INSERT INTO drafts(conversation_id, ticket_id, agent_id, status, problem, fix, method, checks,
-               transcript, created_at) VALUES (?,?,?,'PENDING',?,?,?,?,?,?)""",
+               transcript, created_at, llm_draft) VALUES (?,?,?,'PENDING',?,?,?,?,?,?,?)""",
             (cid, data.get("ticket_id"), data.get("agent_id"), problem, fix, method, json.dumps(checks),
-             json.dumps(msgs), time.time()))
+             json.dumps(msgs), time.time(), json.dumps(alt) if alt else None))
         draft_id = f"S-{cur.lastrowid}"
         conn.execute("UPDATE drafts SET draft_id=? WHERE seq=?", (draft_id, cur.lastrowid))
         mark_processed(conn, event["event_id"])
@@ -241,6 +249,9 @@ def _refresh_pending() -> None:
 def init_db() -> None:
     conn = connect(DB_PATH)
     conn.executescript(DDL + OUTBOX_DDL)
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(drafts)")}
+    if "llm_draft" not in cols:            # added after first release: migrate existing databases
+        conn.execute("ALTER TABLE drafts ADD COLUMN llm_draft TEXT")
     conn.close()
 
 
@@ -269,6 +280,7 @@ def _row(r) -> dict:
     d.pop("seq", None)
     d["checks"] = json.loads(d["checks"])
     d["transcript"] = json.loads(d["transcript"])
+    d["llm_draft"] = json.loads(d["llm_draft"]) if d.get("llm_draft") else None
     return d
 
 

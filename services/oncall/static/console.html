@@ -64,6 +64,10 @@
   .chk { font-size: 12px; border-radius: 6px; padding: 2px 8px; }
   .chk.ok { color: var(--ok); background: var(--ok-bg); }
   .chk.bad { color: var(--bad); background: var(--bad-bg); }
+  .altdraft { font-size: 13px; color: var(--muted); background: #fff; border: 1px dashed var(--line); border-radius: 8px;
+              padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; white-space: pre-wrap; }
+  .altdraft b { color: var(--ink); font-weight: 600; }
+  .altdraft button { align-self: flex-start; margin-top: 4px; font-size: 12px; padding: 4px 10px; }
   .err { color: var(--bad); font-size: 13px; }
 </style>
 </head>
@@ -271,6 +275,22 @@ function renderSummaries(list) {
     for (const c of s.checks) checks.append(el('span', 'chk ' + (c.ok ? 'ok' : 'bad'), (c.ok ? '✔ ' : '✖ ') + c.check.replace('_', ' ') + ': ' + c.detail));
     const summary = el('input'); summary.value = e.summary; summary.placeholder = 'Problem summary';
     const resolution = el('textarea'); resolution.value = e.resolution; resolution.placeholder = 'Fix (what the customer should do)';
+    const fromLabel = el('div', 'hint', s.method.startsWith('extractive')
+      ? 'Below: the customer’s question and the agent’s own words (the AI’s version was not used).'
+      : 'Below: the AI’s summary, checked against the agent’s words.');
+    let alt = null;
+    if (s.llm_draft) {
+      alt = el('div', 'altdraft');
+      alt.append(el('b', null, `What the AI wrote (not used: ${s.llm_draft.why})`));
+      if (s.llm_draft.problem) alt.append(el('div', null, 'PROBLEM: ' + s.llm_draft.problem));
+      alt.append(el('div', null, (s.llm_draft.problem ? 'FIX: ' : '') + s.llm_draft.fix));
+      if (s.llm_draft.problem) {
+        const use = el('button', null, 'Use the AI’s version instead');
+        use.onclick = () => { summary.value = s.llm_draft.problem; resolution.value = s.llm_draft.fix;
+                              Object.assign(e, { summary: summary.value, resolution: resolution.value }); };
+        alt.append(use);
+      }
+    }
     const kbRow = el('label', 'hint');
     const kb = el('input'); kb.type = 'checkbox'; kb.checked = e.kb;
     kbRow.append(kb, ' Reusable answer: add to the knowledge base (untick for one-off issues)');
@@ -290,7 +310,9 @@ function renderSummaries(list) {
       catch (x) { err.textContent = x.message; }
     };
     const btns = el('div', 'actions'); btns.append(approve, reject);
-    item.append(checks, summary, resolution, kbRow, btns, err);
+    item.append(checks);
+    if (alt) item.append(alt);
+    item.append(fromLabel, summary, resolution, kbRow, btns, err);
     box.append(item);
   }
   return box;
