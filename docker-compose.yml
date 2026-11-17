@@ -26,8 +26,13 @@ services:
       DB_PATH: /data/chat.db
       KNOWLEDGE_URL: http://knowledge:8004
       TICKETS_URL: http://tickets:8002
+      CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD:-0.45}
+      LLM_MODE: ${LLM_MODE:-simulated}          # simulated | ollama
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    extra_hosts: ["host.docker.internal:host-gateway"]   # reach Ollama on the host
     volumes: [chat_data:/data]
-    ports: ["8001:8001"]
+    ports: ["8001:8001"]           # chat UI: http://localhost:8001
     depends_on: *depends-rabbit
 
   tickets:

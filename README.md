@@ -17,7 +17,8 @@ Runs fully offline at zero cost (simulated LLM by default; Ollama optional).
 
 | Component | URL |
 |---|---|
-| Chat / RAG Service | http://localhost:8001/docs |
+| **Chat app (start here)** | **http://localhost:8001** |
+| Chat / RAG Service API | http://localhost:8001/docs |
 | Incident / Ticket Service | http://localhost:8002/docs |
 | On-Call & Escalation Service | http://localhost:8003/docs |
 | Knowledge Base Service | http://localhost:8004/docs |
@@ -26,6 +27,19 @@ Runs fully offline at zero cost (simulated LLM by default; Ollama optional).
 | Grafana dashboard | http://localhost:3000 |
 
 Stop and wipe all data: `docker compose down -v`
+
+## Try it
+
+1. Open http://localhost:8001 and click the example questions.
+2. Check answer-vs-escalate accuracy: `python eval/run_eval.py --sweep`
+3. Kill the knowledge base and keep chatting: `docker compose stop knowledge`.
+   Replies escalate and are marked *degraded*; after 3 failures the circuit
+   opens. `docker compose start knowledge` and it recovers by itself.
+4. Real LLM instead of the simulated one (needs Ollama running with
+   `llama3.2:1b`): set `LLM_MODE=ollama` in `.env`, then `docker compose up -d chat`.
+
+> Knowledge and Tickets are currently **temporary mocks** so Chat can be
+> demoed; their owners are replacing them (see docs/TASKS.md).
 
 ## Services and owners
 
