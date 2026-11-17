@@ -48,3 +48,7 @@
 {"question": "hi", "expected": "answer", "expected_doc": null, "category": "small_talk"}
 {"question": "thanks, that worked!", "expected": "answer", "expected_doc": null, "category": "small_talk"}
 {"question": "help", "expected": "answer", "expected_doc": null, "category": "small_talk"}
+{"question": "hii", "expected": "answer", "expected_doc": null, "category": "small_talk"}
+{"question": "heyyy there", "expected": "answer", "expected_doc": null, "category": "small_talk"}
+{"question": "okk thanks", "expected": "answer", "expected_doc": null, "category": "small_talk"}
+{"question": "asdfgh", "expected": "answer", "expected_doc": null, "category": "small_talk"}

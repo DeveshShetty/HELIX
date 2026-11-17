@@ -85,15 +85,22 @@ CAPABILITIES = ("I'm the Helix Cloud support assistant. Ask me about payments, l
                 "storage, billing or the API and I'll answer from our runbooks, FAQs and past "
                 "incidents. If I'm not sure, I'll open a ticket for an on-call engineer instead of guessing.")
 SMALL_TALK = [  # (pattern, reply) - only used when the message has NO other content
-    (re.compile(r"\b(hi|hello|hey|hiya|howdy|yo|good\s+(morning|afternoon|evening))\b"), "Hi! " + CAPABILITIES),
-    (re.compile(r"\b(thanks|thank\s+you|thx|ty|cheers|great|perfect|awesome|ok|okay)\b"),
+    # + quantifiers tolerate stretched spellings: "hii", "heyyy", "hellooo", "thanksss", "okk"
+    (re.compile(r"\b(h+i+|he+l+o+|he+y+|hiya|howdy|yo+|good\s+(morning|afternoon|evening))\b"), "Hi! " + CAPABILITIES),
+    (re.compile(r"\b(than+k+s+|thank\s+you|thx|ty|cheers|great|perfect|awesome|o+k+|okay+)\b"),
      "You're welcome! Is there anything else I can help with?"),
-    (re.compile(r"\b(bye|goodbye|see\s+you|cya)\b"), "Goodbye! Come back any time you need help."),
+    (re.compile(r"\b(bye+|goodbye|see\s+you|cya)\b"), "Goodbye! Come back any time you need help."),
     (re.compile(r"\b(who|what)\s+are\s+you\b|\bwhat\s+can\s+you\s+do\b|^\s*help\s*[?!.]*\s*$"), CAPABILITIES),
 ]
 SMALL_TALK_WORDS = set("""hi hello hey hiya howdy yo good morning afternoon evening thanks thank thx ty
 cheers great perfect awesome ok okay bye goodbye see cya who what are you can do help there
 worked fixed solved sorted nice cool much lot""".split())   # NOT "working": "not working" is a real problem
+def _squash(word: str) -> str:
+    """Collapse repeated letters so stretched spellings match: hii -> hi, heyyy -> hey, hellooo -> helo."""
+    return re.sub(r"(.)\1+", r"\1", word)
+
+
+_SMALL_TALK_SQUASHED = {_squash(w) for w in SMALL_TALK_WORDS}
 CLARIFY = ("Could you tell me a bit more? For example, what were you trying to do, and what error "
            "or behaviour did you see?")
 
@@ -107,7 +114,7 @@ def small_talk_reply(text: str) -> str | None:
     """
     lowered = text.lower()
     words = _TOKEN.findall(lowered)
-    if any(w not in STOPWORDS and w not in SMALL_TALK_WORDS for w in words):
+    if any(w not in STOPWORDS and _squash(w) not in _SMALL_TALK_SQUASHED for w in words):
         return None
     for pattern, reply in SMALL_TALK:
         if pattern.search(lowered):
@@ -279,6 +286,9 @@ def chat(body: ChatIn):
     retrieved_ids = [p["doc_id"] for p in passages]
     if not passages:
         d["confidence"] = 0.0
+        if len(content_terms(question)) <= 1:
+            d.update(decision="answer", reason="needs_clarification", answer=CLARIFY)
+            return _finish(d)
         return _finish(_escalate(d, question, [], "I couldn't find anything about that in our knowledge base."))
 
     # 7. confidence vs threshold (retrieval only: deterministic per index version)
@@ -287,6 +297,11 @@ def chat(body: ChatIn):
     d["sources"] = [{"doc_id": top["doc_id"], "origin": top.get("origin"), "author": top.get("author"),
                      "embedding_model": top.get("embedding_model")}]
     if d["confidence"] < d["threshold"]:
+        # One meaningful word that matches nothing ("hii", "asdf", "billing?") is too little
+        # to page an engineer about: ask for detail instead of opening a ticket.
+        if len(content_terms(question)) <= 1:
+            d.update(decision="answer", reason="needs_clarification", answer=CLARIFY)
+            return _finish(d)
         return _finish(_escalate(d, question, retrieved_ids, "I'm not confident I have the right answer for that."))
 
     # 8. per-query token budget
