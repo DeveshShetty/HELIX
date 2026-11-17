@@ -1,6 +1,16 @@
 """Incident / Ticket Service: the system of record for incidents.
 
 State machine:  OPEN -> ACKED -> RESOLVED   (also OPEN -> RESOLVED)
+                RESOLVED -> OPEN            (reopen: the resolution was wrong)
+
+Revision: every resolve and every reopen increments the ticket's revision,
+and the event carries it. Knowledge uses it to ignore out-of-order events and
+to withdraw a resolution when the ticket is reopened.
+
+Resolving requires a staff-written `summary` of the problem. Only staff-written
+text (summary + resolution) is published for re-indexing, never the user's
+original question, which would otherwise become a stored prompt-injection
+vector reaching every future user.
 
 Consistency pattern: TRANSACTIONAL OUTBOX.
 Every state change and the event announcing it are written in ONE SQLite
@@ -49,7 +59,9 @@ CREATE TABLE IF NOT EXISTS tickets (
   resolved_by       TEXT,
   created_at        REAL NOT NULL,
   acked_at          REAL,
-  resolved_at       REAL
+  resolved_at       REAL,
+  summary           TEXT,
+  revision          INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS idempotency_keys (
   key        TEXT PRIMARY KEY,
@@ -58,7 +70,7 @@ CREATE TABLE IF NOT EXISTS idempotency_keys (
 );
 """
 
-TRANSITIONS = {"ACKED": {"OPEN"}, "RESOLVED": {"OPEN", "ACKED"}}   # target -> allowed sources
+TRANSITIONS = {"ACKED": {"OPEN"}, "RESOLVED": {"OPEN", "ACKED"}, "OPEN": {"RESOLVED"}}  # target -> allowed sources
 
 TICKETS_CREATED = Counter("tickets_created_total", "Tickets created", ["severity"])
 TRANSITIONS_TOTAL = Counter("ticket_transitions_total", "Ticket state transitions", ["to", "outcome"])
@@ -103,7 +115,13 @@ class AckIn(BaseModel):
 
 class ResolveIn(BaseModel):
     responder_id: str = Field(min_length=1)
+    summary: str = Field(min_length=5, max_length=200)     # staff-written description of the problem
     resolution: str = Field(min_length=5)
+
+
+class ReopenIn(BaseModel):
+    responder_id: str = Field(min_length=1)
+    reason: str = Field(min_length=3)
 
 
 def _row_to_ticket(row) -> dict:
@@ -183,7 +201,8 @@ def get_ticket(ticket_id: str):
         conn.close()
 
 
-def _transition(ticket_id: str, target: str, updates: dict, event_type: str, event_data: dict) -> dict:
+def _transition(ticket_id: str, target: str, updates: dict, event_type: str, event_data: dict,
+                bump_revision: bool = False) -> dict:
     """Apply a state transition + enqueue its event atomically. Idempotent on repeat."""
     conn = connect(DB_PATH)
     try:
@@ -197,10 +216,12 @@ def _transition(ticket_id: str, target: str, updates: dict, event_type: str, eve
             conn.execute("ROLLBACK")
             TRANSITIONS_TOTAL.labels(target, "rejected").inc()
             raise HTTPException(409, f"cannot move ticket from {t['status']} to {target}")
+        revision = t["revision"] + 1 if bump_revision else t["revision"]
         cols = ", ".join(f"{k}=?" for k in updates)
-        conn.execute(f"UPDATE tickets SET status=?, {cols} WHERE ticket_id=?",
-                     (target, *updates.values(), ticket_id))
-        enqueue(conn, new_event(event_type, ticket_id, {"ticket_id": ticket_id, **event_data}))
+        conn.execute(f"UPDATE tickets SET status=?, revision=?, {cols} WHERE ticket_id=?",
+                     (target, revision, *updates.values(), ticket_id))
+        enqueue(conn, new_event(event_type, ticket_id,
+                                {"ticket_id": ticket_id, "revision": revision, **event_data}))
         conn.execute("COMMIT")
         TRANSITIONS_TOTAL.labels(target, "applied").inc()
         print(f"[tickets] {ticket_id} {t['status']} -> {target} ({event_type} queued)", flush=True)
@@ -224,12 +245,24 @@ def ack(ticket_id: str, body: AckIn):
 @app.post("/tickets/{ticket_id}/resolve")
 def resolve(ticket_id: str, body: ResolveIn):
     now = time.time()
-    t = get_ticket(ticket_id)
+    # Only staff-written fields go into the event: Knowledge re-indexes them.
     return _transition(ticket_id, "RESOLVED",
-                       {"resolution": body.resolution, "resolved_by": body.responder_id, "resolved_at": now},
+                       {"summary": body.summary, "resolution": body.resolution,
+                        "resolved_by": body.responder_id, "resolved_at": now},
                        "incident.resolved",
-                       {"title": t["title"], "question": t["question"], "resolution": body.resolution,
-                        "resolved_by": body.responder_id, "resolved_at": now})
+                       {"summary": body.summary, "resolution": body.resolution,
+                        "resolved_by": body.responder_id, "resolved_at": now},
+                       bump_revision=True)
+
+
+@app.post("/tickets/{ticket_id}/reopen")
+def reopen(ticket_id: str, body: ReopenIn):
+    now = time.time()
+    return _transition(ticket_id, "OPEN",
+                       {"acked_by": None, "acked_at": None},
+                       "incident.reopened",
+                       {"reopened_by": body.responder_id, "reason": body.reason, "reopened_at": now},
+                       bump_revision=True)
 
 
 @app.get("/outbox")
