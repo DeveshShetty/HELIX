@@ -6,4 +6,4 @@ scrape_configs:
   - job_name: services
     metrics_path: /metrics/
     static_configs:
-      - targets: ["chat:8001", "tickets:8002", "oncall:8003", "knowledge:8004"]
+      - targets: ["chat:8001", "tickets:8002", "oncall:8003", "knowledge:8004", "summariser:8005"]

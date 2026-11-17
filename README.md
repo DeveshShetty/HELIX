@@ -36,7 +36,9 @@ Stop: `docker compose down` · wipe all data: `docker compose down -v`
 3. In the chat, click **Chat with a support agent now**. On the on-call console the ticket shows
    **CUSTOMER WAITING IN CHAT**: **Ack**, **Join live chat** and talk to the customer. You'll also see
    the bot's part of the conversation and why it got stuck.
-4. **End chat & draft summary**, review the pre-filled summary and fix, then **Resolve**.
+4. **End chat**. The Summariser service drafts a summary in the background (a few seconds); it appears
+   under **Summaries to approve** at the top of the console with its automatic checks. Edit if needed and
+   **Approve & resolve** (tick *Reusable answer* to add it to the knowledge base).
 5. Ask the same question again: answered, citing the resolved incident.
 6. **Reopen** the ticket: the answer is withdrawn and the question escalates again.
 7. Break things: `python scripts/demo.py kb-down` (see [docs/RUNBOOK.md](docs/RUNBOOK.md)).
@@ -52,7 +54,9 @@ Stop: `docker compose down` · wipe all data: `docker compose down -v`
        Incident / Ticket ──outbox──► RabbitMQ (support.events) ──────────────────────┤ incident.reopened
             ▲                              │ incident.opened / acked / resolved / reopened
             │ ack / resolve / reopen       ▼
-            └────────────────────── On-Call & Escalation ◄── responders (console)
+            └────────────────────── On-Call & Escalation ◄── responders (console: live chat, approvals)
+                                           ▲ drafts to approve
+ Chat ──outbox── conversation.closed ──► Summariser ── approved → resolve ticket → Knowledge
 ```
 
 | Service | Port | Owns | Key patterns |
@@ -61,8 +65,9 @@ Stop: `docker compose down` · wipe all data: `docker compose down -v`
 | Incident / Ticket | 8002 | tickets (system of record) | transactional outbox, idempotency keys, revisioned state machine |
 | On-Call & Escalation | 8003 | roster, pages | optimistic-concurrency roster, durable ack timers, idempotent consumer + ack |
 | Knowledge Base | 8004 | documents, versioned vector index | blue/green index rebuild, idempotent revision-ordered consumer |
+| Summariser | 8005 | drafts awaiting approval | async consumer, event-carried transcript, LLM few-shot + grounding check, human approval |
 
-Each service has its own SQLite database (database-per-service) and its own Dockerfile.
+Five services; each has its own SQLite database (database-per-service) and its own Dockerfile.
 
 ## AI configuration
 

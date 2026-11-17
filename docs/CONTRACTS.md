@@ -9,7 +9,8 @@ seconds. Every service also exposes `GET /health` and `GET /metrics/`.
 | Chat / RAG | 8001 | chat app at `/` | Devesh Shetty |
 | Incident / Ticket | 8002 | — | Devesh Shetty |
 | On-Call & Escalation | 8003 | on-call console at `/` | Devesh Shetty |
-| Knowledge Base | 8004 | — | Devesh Shetty |
+| Knowledge Base | 8004 | article browser at `/` | Devesh Shetty |
+| Summariser | 8005 | — | Devesh Shetty |
 
 ---
 
@@ -195,14 +196,31 @@ messages link to their decision, so the transcript records why the bot got stuck
 | `GET /conversations/{cid}?after=<seq>` | transcript (+ new messages since `seq`, for polling) |
 | `GET /conversations/by-ticket/{ticket_id}` | transcript for a ticket |
 | `GET /conversations?status=WAITING_AGENT,LIVE` | open live chats |
-| `POST /conversations/{cid}/close` `{agent_id}` | end the chat → `CLOSED`; returns a **draft** `{draft_summary, draft_fix, method}` for the agent to review |
+| `POST /conversations/{cid}/close` `{agent_id}` | end the chat → `CLOSED`; writes `conversation.closed` (with the transcript) to Chat's outbox in the same transaction |
 
 While a conversation is `WAITING_AGENT` or `LIVE`, `POST /chat` stores the message and
 returns `decision: "live"` without running the bot.
 
 ---
 
-## 5. Events (topic exchange `support.events`)
+## 5. Summariser (8005)
+
+Consumes `conversation.closed`, drafts PROBLEM/FIX (Ollama few-shot prompt
+`summary-v2-fewshot`, or extractive), runs automatic checks, stores a PENDING draft.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /drafts?status=PENDING` | drafts waiting for an agent (with `checks`, `method`, `transcript`) |
+| `GET /drafts/{draft_id}` | one draft |
+| `POST /drafts/{draft_id}/approve` `{responder_id, summary, resolution, add_to_knowledge_base}` | re-checks the (edited) text, then resolves the ticket → `incident.resolved` → Knowledge |
+| `POST /drafts/{draft_id}/reject` `{responder_id, reason}` | discard |
+
+Checks: `grounding` (at least 60% of an LLM fix's words must appear in the agent's
+messages, else the extractive draft is used), `llm_format`, `llm_available`,
+`personal_data` (removed automatically), `injection`, `has_fix`. On-Call relays these as
+`GET /summaries`, `POST /summaries/{id}/approve|reject` for the console.
+
+## 6. Events (topic exchange `support.events`)
 
 Envelope: `{ event_id, event_type, aggregate_id, correlation_id, occurred_at, data }`.
 At-least-once; every consumer dedupes on `event_id`.
@@ -213,14 +231,15 @@ At-least-once; every consumer dedupes on `event_id`.
 | `incident.acked` | Tickets | On-Call | `ticket_id, revision, responder_id, acked_at` |
 | `incident.resolved` | Tickets | Knowledge, On-Call | `ticket_id, revision, summary, resolution, resolved_by, resolved_at, add_to_knowledge_base` |
 | `incident.reopened` | Tickets | Knowledge, On-Call | `ticket_id, revision, reopened_by, reason, reopened_at` |
+| `conversation.closed` | Chat (outbox) | Summariser | `conversation_id, ticket_id, agent_id, closed_at, messages[]` (event-carried transcript) |
 
 Queues and bindings are declared by every service at startup from
-`common/topology.py` (`oncall.incident-lifecycle`, `knowledge.incident-lifecycle`),
+`common/topology.py` (`oncall.incident-lifecycle`, `knowledge.incident-lifecycle`, `summariser.conversations`),
 so an event never waits on a consumer having started first.
 
 ---
 
-## 6. Metrics
+## 7. Metrics
 
 All services: `http_requests_total`, `http_request_duration_seconds`, `events_consumed_total`.
 
@@ -229,4 +248,5 @@ All services: `http_requests_total`, `http_request_duration_seconds`, `events_co
 | Chat | `chat_decisions_total{decision,reason}`, `chat_confidence`, `llm_tokens_total`, `llm_cost_usd_total`, `llm_daily_spend_usd`, `llm_daily_ceiling_usd`, `escalations_pending`, `circuit_breaker_state{breaker}` |
 | Tickets | `tickets_created_total`, `ticket_transitions_total`, `outbox_backlog` |
 | Knowledge | `kb_chunks{index_version}`, `kb_reindex_total`, `kb_index_builds_total`, `embedding_tokens_total`, `embedding_cost_usd_total` |
+| Summariser | `summaries_drafted_total{method}`, `summary_checks_failed_total{check}`, `summaries_decided_total`, `summaries_pending`, `summariser_llm_tokens_total`, `summariser_llm_cost_usd_total` |
 | On-Call | `pages_sent_total{level}`, `escalations_total{from_level}`, `pages_pending`, `page_acks_total` |
