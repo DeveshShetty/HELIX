@@ -95,6 +95,23 @@ responder's summary and resolution. The poisoned seed documents
 (`inj-poisoned-status-page`, `inj-poisoned-api-changelog`) are answered with
 the injected sentences stripped (2 sentences removed each).
 
+## E8. Live hand-off and conversation summaries
+
+Customer asked "can I get invoices in Japanese yen?" (confidence 0.285 < 0.40 → escalated),
+chose "chat with an agent"; alice joined from the console and answered; while the chat was
+live the bot stayed silent (`decision: live`). The full transcript is stored in Chat's
+database with each bot reply linked to its decision (reason, confidence, threshold).
+
+When alice ended the chat, llama3.2:1b was asked for a PROBLEM/FIX summary. Its output:
+
+    Customer: can I get invoices in Japanese yen?
+    FIX: Go to Billing > Settings > Invoice currency and select Japanese yen as the currency.
+
+It ignored the format and **contradicted the agent** (alice said yen is not available). The
+format check rejected it and the extractive draft (customer question + agent's words) was
+used. The draft is never indexed directly: alice edited it and resolved, and a new customer
+asking "can I be invoiced in yen?" was answered from her reviewed text.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).
@@ -102,3 +119,5 @@ the injected sentences stripped (2 sentences removed each).
 - Injection detection is pattern-based; it is one layer, not a guarantee.
 - Daily budget is enforced per Chat instance (SQLite); several replicas would need a shared counter.
 - All prices are notional; local models cost nothing to run.
+- Live chat uses polling (1.5 s), not WebSockets; fine for a demo, not for thousands of chats.
+- The customer is not notified when a ticket they did not chat about is resolved.

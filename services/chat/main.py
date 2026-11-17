@@ -33,6 +33,7 @@ from common.circuit_breaker import CircuitOpenError
 from common.db import start_daemon
 from common.observability import instrument
 from services.chat import clients, guard, llm
+from services.chat.conversations import ConversationStore, draft_summary
 from services.chat.store import DecisionStore
 
 SERVICE = "chat"
@@ -50,6 +51,7 @@ DAILY_COST_CEILING_USD = float(os.getenv("DAILY_COST_CEILING_USD", "0.50"))
 app = FastAPI(title="Chat / RAG Support Service")
 instrument(app, SERVICE)
 store = DecisionStore(DB_PATH)
+convs = ConversationStore(DB_PATH)      # after DecisionStore: transcripts join the decisions table
 
 DECISIONS = Counter("chat_decisions_total", "Answer/escalate/refuse decisions", ["decision", "reason"])
 CONFIDENCE = Histogram("chat_confidence", "Confidence score per decision",
@@ -162,6 +164,8 @@ def try_open_ticket(decision_id: str, payload: dict) -> str | None:
         store.escalation_failed(decision_id, repr(exc))
         return None
     store.escalation_done(decision_id, t["ticket_id"])
+    if payload.get("conversation_id"):
+        convs.set(payload["conversation_id"], ticket_id=t["ticket_id"])
     return t["ticket_id"]
 
 
@@ -233,6 +237,14 @@ def chat(body: ChatIn):
         "sources": [], "tokens": {"prompt": 0, "completion": 0}, "cost_usd": 0.0,
         "dry_run": body.dry_run,
     }
+
+    # 0. conversation log; while a human agent is handling the chat, the bot stays quiet
+    if not body.dry_run:
+        conv = convs.ensure(d["conversation_id"])
+        convs.add(d["conversation_id"], "user", "customer", question)
+        if conv["status"] in ("WAITING_AGENT", "LIVE"):
+            return {"conversation_id": d["conversation_id"], "decision": "live", "reason": "agent_handling",
+                    "answer": "", "status": conv["status"], "ticket_id": conv["ticket_id"]}
 
     # 1. direct prompt injection in the user's message
     if guard.looks_like_injection(question):
@@ -336,6 +348,10 @@ def _finish(d: dict) -> dict:
     if d["confidence"] is not None:
         CONFIDENCE.observe(d["confidence"])
     store.save(d)
+    if not d.get("dry_run"):
+        convs.add(d["conversation_id"], "bot", "helix", d["answer"], d["decision_id"])
+        if d["ticket_id"]:
+            convs.set(d["conversation_id"], ticket_id=d["ticket_id"])
     print(f"[decision] {d['decision_id']} {d['decision']}/{d['reason']} conf={d['confidence']} "
           f"thr={d['threshold']} emb={d['embedding_model']} ticket={d['ticket_id']}", flush=True)
     return {k: v for k, v in d.items() if k != "message"}
@@ -359,6 +375,100 @@ def feedback(decision_id: str, body: FeedbackIn):
     if not store.feedback(decision_id, body.human_contradicted, body.note):
         raise HTTPException(404, "decision not found")
     return {"decision_id": decision_id, "recorded": True}
+
+
+# ------------------------------------------------------------------ live hand-off to a human agent
+
+HANDOFFS = Counter("chat_handoffs_total", "Customers who asked to chat with a person")
+LIVE_CHATS = Gauge("chat_live_conversations", "Conversations waiting for or talking to an agent")
+
+
+class MessageIn(BaseModel):
+    role: str = Field(pattern="^(user|agent)$")
+    author: str = Field(min_length=1, max_length=60)
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class CloseIn(BaseModel):
+    agent_id: str = Field(min_length=1, max_length=60)
+
+
+def _conv_or_404(cid: str) -> dict:
+    conv = convs.get(cid)
+    if not conv:
+        raise HTTPException(404, "conversation not found")
+    return conv
+
+
+def _update_live_gauge() -> None:
+    LIVE_CHATS.set(len(convs.with_status(["WAITING_AGENT", "LIVE"])))
+
+
+@app.post("/conversations/{cid}/handoff")
+def handoff(cid: str):
+    """Customer chose 'chat with a person'. The ticket already exists and on-call is being paged."""
+    conv = _conv_or_404(cid)
+    if conv["status"] in ("WAITING_AGENT", "LIVE"):
+        return conv
+    if not conv["ticket_id"]:
+        raise HTTPException(409, "no ticket for this conversation yet")
+    convs.set(cid, status="WAITING_AGENT")
+    convs.add(cid, "system", "helix", f"Connecting you to a support agent (reference {conv['ticket_id']}). "
+                                      "Please keep this window open; they'll join here shortly.")
+    HANDOFFS.inc()
+    _update_live_gauge()
+    print(f"[handoff] {cid} waiting for an agent ({conv['ticket_id']})", flush=True)
+    return convs.get(cid)
+
+
+@app.post("/conversations/{cid}/messages")
+def post_message(cid: str, body: MessageIn):
+    conv = _conv_or_404(cid)
+    if conv["status"] == "CLOSED" and body.role == "agent":
+        raise HTTPException(409, "this chat has ended")
+    if body.role == "user" and conv["status"] not in ("WAITING_AGENT", "LIVE"):
+        raise HTTPException(409, "not in a live chat; send questions to POST /chat")
+    if body.role == "agent" and conv["status"] != "LIVE":
+        convs.set(cid, status="LIVE", agent_id=body.author)
+        convs.add(cid, "system", "helix", f"{body.author} from Helix support joined the chat.")
+        _update_live_gauge()
+    seq = convs.add(cid, body.role, body.author, body.text.strip())
+    return {"seq": seq}
+
+
+@app.get("/conversations")
+def list_conversations(status: str = "WAITING_AGENT,LIVE"):
+    return convs.with_status([s.strip().upper() for s in status.split(",") if s.strip()])
+
+
+@app.get("/conversations/by-ticket/{ticket_id}")
+def conversation_for_ticket(ticket_id: str, after: int = 0):
+    conv = convs.by_ticket(ticket_id)
+    if not conv:
+        raise HTTPException(404, "no conversation for this ticket")
+    return {**conv, "messages": convs.messages(conv["conversation_id"], after)}
+
+
+@app.get("/conversations/{cid}")
+def get_conversation(cid: str, after: int = 0):
+    """The full stored transcript: customer, bot (with why it answered or got stuck), agent."""
+    return {**_conv_or_404(cid), "messages": convs.messages(cid, after)}
+
+
+@app.post("/conversations/{cid}/close")
+def close_conversation(cid: str, body: CloseIn):
+    """Agent ends the chat. Returns a DRAFT summary for the agent to review before it is resolved."""
+    conv = _conv_or_404(cid)
+    if conv["status"] != "CLOSED":
+        convs.add(cid, "system", "helix", f"{body.agent_id} ended the chat. Thanks for contacting Helix Cloud "
+                                          "support! You can keep asking me questions here.")
+    problem, fix, method = draft_summary(convs.messages(cid))
+    convs.set(cid, status="CLOSED", closed_at=time.time(), draft_summary=problem, draft_fix=fix)
+    _update_live_gauge()
+    print(f"[handoff] {cid} closed by {body.agent_id}; summary drafted ({method})", flush=True)
+    return {"conversation_id": cid, "ticket_id": conv["ticket_id"], "draft_summary": problem,
+            "draft_fix": fix, "method": method,
+            "note": "Draft only. Review and edit it before resolving: it is built from customer text."}
 
 
 @app.get("/config")

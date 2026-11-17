@@ -125,6 +125,10 @@ everything that gets re-indexed.
 ### `POST /incidents/{ticket_id}/resolve`, `POST /incidents/{ticket_id}/reopen`
 Same bodies as the Ticket Service; forwarded with timeout + retry.
 
+### Live chat (relayed to the Chat service, which owns conversations)
+`GET /tickets/{ticket_id}/conversation`, `POST /conversations/{cid}/messages` `{responder_id, text}`,
+`POST /conversations/{cid}/close` `{responder_id}` → draft summary.
+
 ### `GET /console/data`
 Everything the console shows. Falls back to the local ticket projection if the
 Ticket Service is unreachable.
@@ -178,6 +182,22 @@ If the Ticket Service is unreachable, `escalation_pending: true` and the
 escalation is delivered later by the outbox worker (same `Idempotency-Key`).
 
 ### `GET /decisions?limit=50`, `GET /decisions/{id}`, `POST /decisions/{id}/feedback`, `GET /config`
+
+### Conversations and live hand-off
+Every message is stored (`conversations`, `messages` tables in Chat's database); bot
+messages link to their decision, so the transcript records why the bot got stuck.
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /conversations/{cid}/handoff` | customer chose "chat with an agent" (needs a ticket); status `BOT → WAITING_AGENT` |
+| `POST /conversations/{cid}/messages` `{role: user\|agent, author, text}` | live message; the first agent message makes it `LIVE` |
+| `GET /conversations/{cid}?after=<seq>` | transcript (+ new messages since `seq`, for polling) |
+| `GET /conversations/by-ticket/{ticket_id}` | transcript for a ticket |
+| `GET /conversations?status=WAITING_AGENT,LIVE` | open live chats |
+| `POST /conversations/{cid}/close` `{agent_id}` | end the chat → `CLOSED`; returns a **draft** `{draft_summary, draft_fix, method}` for the agent to review |
+
+While a conversation is `WAITING_AGENT` or `LIVE`, `POST /chat` stores the message and
+returns `decision: "live"` without running the bot.
 
 ---
 

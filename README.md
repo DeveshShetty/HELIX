@@ -33,12 +33,14 @@ Stop: `docker compose down` · wipe all data: `docker compose down -v`
 
 1. Chat app: click the example questions (answered, escalated, poisoned document, injection).
 2. Ask something it can't answer, e.g. *"do you offer a student discount"*: it opens a ticket.
-3. On-call console: watch the page escalate (alice → bob → carol every 30 s), **Ack**, then
-   **Resolve** with a summary and fix.
-4. Ask the same question again: answered, citing the resolved incident.
-5. **Reopen** the ticket: the answer is withdrawn and the question escalates again.
-6. Break things: `python scripts/demo.py kb-down` (see [docs/RUNBOOK.md](docs/RUNBOOK.md)).
-7. Calibrate: `python eval/run_eval.py` and `python eval/flip_test.py`.
+3. In the chat, click **Chat with a support agent now**. On the on-call console the ticket shows
+   **CUSTOMER WAITING IN CHAT**: **Ack**, **Join live chat** and talk to the customer. You'll also see
+   the bot's part of the conversation and why it got stuck.
+4. **End chat & draft summary**, review the pre-filled summary and fix, then **Resolve**.
+5. Ask the same question again: answered, citing the resolved incident.
+6. **Reopen** the ticket: the answer is withdrawn and the question escalates again.
+7. Break things: `python scripts/demo.py kb-down` (see [docs/RUNBOOK.md](docs/RUNBOOK.md)).
+8. Calibrate: `python eval/run_eval.py` and `python eval/flip_test.py`.
 
 ## Architecture
 
