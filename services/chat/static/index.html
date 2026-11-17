@@ -120,7 +120,11 @@ async function refreshStatus() {
 
 function renderBot(r) {
   const box = el('div', 'msg bot');
-  const labels = { answer: 'Answered', escalate: 'Escalated', refused: 'Refused' };
+  if (r.reason === 'small_talk' || r.reason === 'needs_clarification') {
+    box.textContent = r.answer;   // conversational reply: no badge, no retrieval details
+    return box;
+  }
+  const labels ={ answer: 'Answered', escalate: 'Escalated', refused: 'Refused' };
   box.append(el('span', 'badge b-' + r.decision, labels[r.decision] || r.decision));
   if (r.degraded) box.append(el('span', 'badge b-degraded', 'Degraded'));
   box.append(document.createElement('br'));

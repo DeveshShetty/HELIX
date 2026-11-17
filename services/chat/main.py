@@ -58,6 +58,40 @@ def content_terms(text: str) -> set[str]:
     return {_stem(w) for w in _TOKEN.findall(text.lower()) if w not in STOPWORDS}
 
 
+CAPABILITIES = ("I'm the Helix Cloud support assistant. Ask me about payments, logins and 2FA, "
+                "storage, billing or the API and I'll answer from our runbooks, FAQs and past "
+                "incidents. If I'm not sure, I'll open a ticket for an on-call engineer instead of guessing.")
+SMALL_TALK = [  # (pattern, reply) - only used when the message has NO other content
+    (re.compile(r"\b(hi|hello|hey|hiya|howdy|yo|good\s+(morning|afternoon|evening))\b"), "Hi! " + CAPABILITIES),
+    (re.compile(r"\b(thanks|thank\s+you|thx|ty|cheers|great|perfect|awesome|ok|okay)\b"),
+     "You're welcome! Is there anything else I can help with?"),
+    (re.compile(r"\b(bye|goodbye|see\s+you|cya)\b"), "Goodbye! Come back any time you need help."),
+    (re.compile(r"\b(who|what)\s+are\s+you\b|\bwhat\s+can\s+you\s+do\b|^\s*help\s*[?!.]*\s*$"), CAPABILITIES),
+]
+SMALL_TALK_WORDS = set("""hi hello hey hiya howdy yo good morning afternoon evening thanks thank thx ty
+cheers great perfect awesome ok okay bye goodbye see cya who what are you can do help there
+worked fixed solved sorted nice cool much lot""".split())   # NOT "working": "not working" is a real problem
+CLARIFY = ("Could you tell me a bit more? For example, what were you trying to do, and what error "
+           "or behaviour did you see?")
+
+
+def small_talk_reply(text: str) -> str | None:
+    """Reply for greetings/thanks/vague messages, or None if this is a real question.
+
+    A message is small talk only if nothing is left once greeting words and
+    stopwords are removed, so "hi, my payment api returns 502" is NOT small talk.
+    Without this step every "hi" found no document and opened a ticket.
+    """
+    lowered = text.lower()
+    words = _TOKEN.findall(lowered)
+    if any(w not in STOPWORDS and w not in SMALL_TALK_WORDS for w in words):
+        return None
+    for pattern, reply in SMALL_TALK:
+        if pattern.search(lowered):
+            return reply
+    return CLARIFY
+
+
 IDENTIFIER_PENALTY = float(os.getenv("IDENTIFIER_PENALTY", "0.5"))
 
 
@@ -126,6 +160,13 @@ def chat(body: ChatIn):
     if guard.looks_like_injection(question):
         d.update(decision="refused", reason="injection_detected",
                  answer="I can't help with that request. I can only answer Helix Cloud support questions.")
+        return _finish(d)
+
+    # 1b. greetings, thanks, vague messages: reply directly, no search, no ticket
+    reply = small_talk_reply(question)
+    if reply is not None:
+        d.update(decision="answer", answer=reply,
+                 reason="needs_clarification" if reply == CLARIFY else "small_talk")
         return _finish(d)
 
     # 2. retrieve, behind timeout + retry + circuit breaker
