@@ -7,6 +7,7 @@ degrades, then shows it recover. Run from the repo root with the stack up:
     python scripts/demo.py broker-down      # RabbitMQ dies -> tickets still accepted, outbox drains later
     python scripts/demo.py oncall-restart   # On-Call restarts mid-timer -> escalation still happens
     python scripts/demo.py duplicate        # replay an event -> consumers ignore the duplicate
+    python scripts/demo.py poison           # malformed event -> retried, then dead-lettered; valid events still flow
     python scripts/demo.py loop             # full loop: escalate -> page -> ack -> resolve -> re-ask -> reopen
     python scripts/demo.py all
 
@@ -167,6 +168,51 @@ def duplicate():
                 print("   ", line.strip())
 
 
+def dlq_depth() -> int:
+    """Messages waiting in the dead-letter queue, read with rabbitmqctl inside the broker container."""
+    out = subprocess.run(["docker", "compose", "exec", "-T", "rabbitmq", "rabbitmqctl", "list_queues",
+                          "name", "messages", "--quiet"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[0] == "support.events.dlq":
+            return int(parts[1])
+    return -1
+
+
+def metric(port: int, name: str) -> float:
+    """Sum of a counter across its labels, read from a service's /metrics/."""
+    try:
+        with urlopen(f"http://localhost:{port}/metrics/", timeout=5) as r:
+            text = r.read().decode()
+    except (URLError, OSError):
+        return -1
+    return sum(float(line.rsplit(" ", 1)[1]) for line in text.splitlines()
+               if line.startswith(name + "{") or line.startswith(name + " "))
+
+
+def poison():
+    before = dlq_depth()
+    step(f"Publish a malformed incident.resolved, then a valid event behind it (DLQ depth now {before})")
+    out = subprocess.run(["docker", "compose", "exec", "-T", "tickets", "python", "-"],
+                         input=open("scripts/publish_poison.py", "rb").read(), capture_output=True)
+    text = (out.stdout or out.stderr).decode().strip()
+    print("   ", text.replace("\n", "\n    "))
+    ids = dict(line.split()[0].split("=") for line in text.splitlines() if "=" in line)
+    step("Wait for the valid event, then for the poison message to use up its attempts")
+    ok_seen = False
+    for _ in range(60):
+        logs = subprocess.run(["docker", "compose", "logs", "knowledge", "--since", "3m"], capture_output=True, text=True).stdout
+        ok_seen = ok_seen or any(ids.get("valid", "?") in l and "reopened" in l for l in logs.splitlines())
+        if dlq_depth() > before and ok_seen:
+            break
+        time.sleep(1)
+    for line in logs.splitlines():
+        if ids.get("poison", "?") in line or ids.get("valid", "?") in line or "DEAD-LETTERED" in line:
+            print("   ", line.strip()[:220])
+    print(f"    valid event processed while the poison message was retried: {ok_seen}")
+    print(f"    DLQ depth: {before} -> {dlq_depth()}; knowledge dead_lettered_total = {metric(8004, 'dead_lettered_total')}")
+
+
 def loop():
     q = "do you offer a student discount"
     step(f"Ask: {q!r}")
@@ -193,7 +239,7 @@ def loop():
 
 
 DEMOS = {"kb-down": kb_down, "kb-slow": kb_slow, "tickets-down": tickets_down, "broker-down": broker_down,
-         "oncall-restart": oncall_restart, "duplicate": duplicate, "loop": loop}
+         "oncall-restart": oncall_restart, "duplicate": duplicate, "poison": poison, "loop": loop}
 
 if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else ""

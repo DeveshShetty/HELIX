@@ -1,0 +1,11 @@
+groups:
+  - name: helix
+    rules:
+      - alert: MessagesDeadLettered
+        # any message moved to support.events.dlq in the last 10 minutes needs a person
+        expr: sum by (queue) (increase(dead_lettered_total[10m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Messages dead-lettered from {{ $labels.queue }}"
+          description: "Inspect support.events.dlq in the RabbitMQ UI (http://localhost:15672)."

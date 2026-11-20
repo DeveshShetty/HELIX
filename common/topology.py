@@ -8,12 +8,17 @@ block the outbox relay for everyone (head-of-line blocking: the relay
 publishes in order, so a stuck incident.opened held back incident.resolved).
 With the topology declared up front, events for a consumer that is down wait
 in its durable queue and are delivered when it comes back.
+
+DEAD_LETTER_QUEUE receives messages that kept failing after MAX_DELIVERY_ATTEMPTS
+(see common/messaging.handle_failure). It is reached through the default
+exchange, so nothing routes to it by accident.
 """
 QUEUES: dict[str, list[str]] = {
     "oncall.incident-lifecycle": ["incident.opened", "incident.acked", "incident.resolved", "incident.reopened"],
     "knowledge.incident-lifecycle": ["incident.resolved", "incident.reopened"],
     "summariser.conversations": ["conversation.closed"],
 }
+DEAD_LETTER_QUEUE = "support.events.dlq"
 
 
 def declare(channel, exchange: str) -> None:
@@ -22,3 +27,4 @@ def declare(channel, exchange: str) -> None:
         channel.queue_declare(queue=queue, durable=True)
         for key in keys:
             channel.queue_bind(exchange=exchange, queue=queue, routing_key=key)
+    channel.queue_declare(queue=DEAD_LETTER_QUEUE, durable=True)

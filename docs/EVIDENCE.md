@@ -162,6 +162,39 @@ Two more bugs found while reviewing: a customer queued for an agent stayed in
 "Stop waiting" and automatic release when the ticket is resolved; and approving a summary
 for an already-resolved ticket reported success while nothing was indexed, now a 409.
 
+## E11. Dead-letter queue for poison messages (audit fix 1)
+
+`python scripts/demo.py poison` publishes a malformed `incident.resolved` (no summary or
+fix) and, right behind it, a valid `incident.reopened` (`scripts/publish_poison.py`).
+Run on 2026-11-21, `MAX_DELIVERY_ATTEMPTS=5`:
+
+```
+knowledge  handler error on e4ae5752-… (attempt 1/5): ValueError: incident.resolved needs summary and resolution; retrying later
+knowledge  [ingest] T-DLQOK-99668 reopened (rev 1): withdrawn            <- valid event processed between retries
+knowledge  handler error on e4ae5752-… (attempt 2/5) … (attempt 3/5) … (attempt 4/5)
+knowledge  DEAD-LETTERED message e4ae5752-… after 5 attempts: ValueError: incident.resolved needs summary and resolution
+DLQ depth (rabbitmqctl list_queues): 1 -> 2
+dead_lettered_total{queue="knowledge.incident-lifecycle"} = 2      (Prometheus)
+alert MessagesDeadLettered queue=knowledge.incident-lifecycle state=firing
+```
+
+Before the fix, the same message was nacked and requeued at the head of the queue forever,
+blocking everything behind it (prefetch 1). Now a failing message goes to the back of its own
+queue with an `x-helix-attempts` header and a backoff with jitter, and after the last attempt
+it moves to `support.events.dlq` with `x-last-error`, `x-original-queue`,
+`x-original-routing-key` and the original message id.
+
+Bug found while verifying: the first version put a float timestamp in the dead-letter
+headers. AMQP header tables can't encode floats, so pika dropped the connection, the message
+was redelivered, and it looped at attempt 5 (the first DLQ message above, `fc8194a8…`, was
+stuck like that). Fixed with an integer timestamp; the stuck message was then dead-lettered
+on the next delivery.
+
+Dashboard: panels "Poison messages: retries and dead-lettered" and "Dead-lettered (total)";
+Prometheus rule `MessagesDeadLettered` in `monitoring/prometheus/rules.yml`.
+Not verified: a dead-lettered message cannot be replayed from the DLQ with a script yet; it
+has to be moved by hand in the RabbitMQ UI.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).
