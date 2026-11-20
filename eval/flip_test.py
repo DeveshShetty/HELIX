@@ -43,12 +43,15 @@ def main() -> None:
           f"(threshold {chosen[0][1]['threshold']}, index {chosen[0][1]['index_version']})\n")
     print(f"{'conf':>5} {'decisions':24} {'flips':>5} {'answer texts':>12}  question")
     total_flipping = 0
+    all_models = Counter()
     for q, first in chosen:
         decisions, texts, models = Counter(), Counter(), Counter()
         for _ in range(args.runs):
             r = ask(args.url, q)
             decisions[r["decision"]] += 1
             models[r["model"] or "-"] += 1
+            if r["model"]:
+                all_models[r["model"]] += 1
             if r["decision"] == "answer":
                 texts[r["answer"]] += 1
         flips = len(decisions) > 1
@@ -56,7 +59,7 @@ def main() -> None:
         dec = ", ".join(f"{k} x{v}" for k, v in decisions.items())
         print(f"{first['confidence']:5.2f} {dec:24} {'YES' if flips else 'no':>5} {len(texts):>12}  {q}")
     print(f"\n{total_flipping}/{len(chosen)} questions flipped decision across {args.runs} runs "
-          f"(LLM: {', '.join(sorted(models))}).")
+          f"(LLM: {', '.join(sorted(all_models)) or 'not called: every decision escalated'}).")
     print("'answer texts' = distinct wordings of the answer: >1 means the generated text varied.")
 
 

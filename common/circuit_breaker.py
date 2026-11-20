@@ -3,7 +3,6 @@
 Changes from the lab version: thread-safe (FastAPI runs sync handlers in a
 thread pool), named, and exports its state as a Prometheus gauge.
 """
-import logging
 import threading
 import time
 from collections import deque
@@ -11,7 +10,6 @@ from enum import Enum
 
 from prometheus_client import Gauge
 
-logger = logging.getLogger("circuit_breaker")
 
 CIRCUIT_STATE = Gauge(
     "circuit_breaker_state",
@@ -48,7 +46,6 @@ class CircuitBreaker:
 
     def _set(self, new_state: CircuitState) -> None:
         if new_state != self.state:
-            logger.warning("[breaker:%s] %s -> %s", self.name, self.state.value, new_state.value)
             print(f"[breaker:{self.name}] {self.state.value} -> {new_state.value}", flush=True)
             self.state = new_state
         CIRCUIT_STATE.labels(self.name).set(_GAUGE_VALUE[new_state])

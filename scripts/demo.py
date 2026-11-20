@@ -47,6 +47,12 @@ def wait_healthy(url: str, timeout: float = 60) -> None:
     raise SystemExit(f"{url} did not come back")
 
 
+def gap_question() -> str:
+    """A question the knowledge base can never have learned: earlier demo runs resolve their
+    questions into the KB, so a fixed 'unknown' question stops escalating after the first run."""
+    return f"does helix support the orbit-{int(time.time()) % 100000} protocol"
+
+
 def step(msg: str) -> None:
     print(f"\n>>> {msg}")
 
@@ -95,7 +101,7 @@ def kb_slow():
 def tickets_down():
     step("docker compose stop tickets, then ask something the KB cannot answer")
     compose("stop", "tickets")
-    r = chat("are you hipaa compliant")
+    r = chat(gap_question())
     print(f"    user sees: {r['answer']}")
     print("    escalations waiting:", call("GET", CHAT + "/config")["escalations_pending"])
     step("docker compose start tickets: the chat outbox worker delivers the escalation")
@@ -134,7 +140,7 @@ def broker_down():
 def oncall_restart():
     roster = call("GET", ONCALL + "/roster")["chain"]
     step(f"Escalate a question; On-Call pages {roster[0]}")
-    r = call("POST", CHAT + "/chat", {"message": "does helix integrate with salesforce"})
+    r = call("POST", CHAT + "/chat", {"message": gap_question()})
     tid = r["ticket_id"]
     time.sleep(3)
     print("    pages:", [(p["responder_id"], p["status"]) for p in call("GET", f"{ONCALL}/pages?ticket_id={tid}")])

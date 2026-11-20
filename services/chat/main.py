@@ -410,20 +410,32 @@ def _update_live_gauge() -> None:
     LIVE_CHATS.set(len(convs.with_status(["WAITING_AGENT", "LIVE"])))
 
 
+class HandoffIn(BaseModel):
+    # The ticket of the escalation whose button the customer clicked. Without it the hand-off
+    # used the conversation's LATEST ticket, which is the wrong one when two questions in the
+    # same conversation escalate close together.
+    ticket_id: str | None = None
+
+
 @app.post("/conversations/{cid}/handoff")
-def handoff(cid: str):
+def handoff(cid: str, body: HandoffIn | None = None):
     """Customer chose 'chat with a person'. The ticket already exists and on-call is being paged."""
     conv = _conv_or_404(cid)
     if conv["status"] in ("WAITING_AGENT", "LIVE"):
         return conv
-    if not conv["ticket_id"]:
+    ticket_id = body.ticket_id if body and body.ticket_id else conv["ticket_id"]
+    if not ticket_id:
         raise HTTPException(409, "no ticket for this conversation yet")
-    convs.set(cid, status="WAITING_AGENT", agent_id=None)   # a new hand-off starts without an agent
-    convs.add(cid, "system", "helix", f"Connecting you to a support agent (reference {conv['ticket_id']}). "
+    owner = convs.by_ticket(ticket_id)
+    if not owner or owner["conversation_id"] != cid:
+        raise HTTPException(409, f"{ticket_id} does not belong to this conversation")
+    # ticket_id becomes the conversation's current ticket: the agent and the summary use it
+    convs.set(cid, status="WAITING_AGENT", agent_id=None, ticket_id=ticket_id)
+    convs.add(cid, "system", "helix", f"Connecting you to a support agent (reference {ticket_id}). "
                                       "Please keep this window open; they'll join here shortly.")
     HANDOFFS.inc()
     _update_live_gauge()
-    print(f"[handoff] {cid} waiting for an agent ({conv['ticket_id']})", flush=True)
+    print(f"[handoff] {cid} waiting for an agent ({ticket_id})", flush=True)
     return convs.get(cid)
 
 
