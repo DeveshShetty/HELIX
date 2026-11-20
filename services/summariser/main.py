@@ -45,6 +45,10 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
 OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "60"))
 # Steps are reworded into imperatives, so require half (not 60%) of their words from the agent.
 GROUNDING_MIN = float(os.getenv("SUMMARY_GROUNDING_MIN", "0.5"))
+# Title + symptoms are reworded freely, so only a loose overlap with the escalated question is required.
+TOPIC_MIN = float(os.getenv("SUMMARY_TOPIC_MIN", "0.3"))
+# A cause is a claim customers will rely on: stricter than steps.
+CAUSE_GROUNDING_MIN = float(os.getenv("SUMMARY_CAUSE_GROUNDING_MIN", "0.7"))
 PRICE_PROMPT_PER_1K = float(os.getenv("PRICE_PROMPT_PER_1K", "0.00015"))
 PRICE_COMPLETION_PER_1K = float(os.getenv("PRICE_COMPLETION_PER_1K", "0.0006"))
 
@@ -116,8 +120,8 @@ _WORD = re.compile(r"[a-z0-9]{4,}")
 
 ADVICE_VERBS = {"try", "check", "confirm", "make", "restart", "reinstall", "update", "enable", "allow", "clear",
                 "log", "sign", "go", "open", "turn", "reset", "use", "set", "add", "remove", "upload", "verify"}
-_FILLER = re.compile(r"^(hi+|hello+|hey+|thanks?|thank you|welcome|you're welcome|no problem|sure|ok(ay)?)\b"
-                     r"|^(i'?m|i am)\s+\w+\s+from\b|how can i help|what'?s the issue|whats the issue"
+_FILLER = re.compile(r"^(h+i+|hel+o+|he+y+|than+ks?|welcome|you're welcome|no problem|sure|o+k+(ay)?|hm+)\b"
+                     r"|\bthank(s|\s+you)\b|^(i'?m|i am)\s+\w+\s+from\b|how can i help|what'?s the issue|whats the issue"
                      r"|give me (a|some) (sec|second|moment|minute|time)|let me (check|look)|one moment", re.I)
 
 
@@ -127,6 +131,10 @@ def depersonalise(text: str) -> str:
     s = text.strip()
     question = s.endswith("?") or bool(re.match(r"^(do|does|can|could|how|is|are|what|where|why|when)\b", s, re.I))
     s = re.sub(r"^(hi+|hello+|hey+)[\s,!.]*", "", s, flags=re.I)
+    if question:
+        # FAQ titles are written in the customer's voice ("How do I reset my password?"): keep it.
+        s = s.strip(" ?.!")
+        return (s[:1].upper() + s[1:] + "?")[:120]
     s = re.sub(r"^(i\s*am|i'm|im|we\s*are|we're)\s+(facing|getting|having|seeing|experiencing)\s+", "", s, flags=re.I)
     s = re.sub(r"^(i|we)\s+(can't|cannot|cant)\s+", "Cannot ", s, flags=re.I)
     s = re.sub(r"^(i|we)\s+(want|need|would like)\s+to\s+", "How to ", s, flags=re.I)
@@ -179,30 +187,58 @@ def compose(symptoms: str, cause: str, steps: list[str], question: bool = False)
     return f"Symptoms: {symptoms}\n\nCause: {cause}\n\nSteps:\n{numbered}"
 
 
+def focus(msgs: list[dict]) -> tuple[dict | None, list[dict]]:
+    """The part of the conversation the hand-off was about.
+
+    A chat can contain several questions, some already answered by the bot. Only the
+    question that was ESCALATED to the agent (the last escalation before the agent
+    joined) and the customer/agent messages after it belong in the summary. The bot's
+    own answers are dropped: they come from the knowledge base already, and mixing them
+    in once produced an article about the wrong problem with a step the agent never gave.
+    Returns (escalated question message or None, focused customer/agent messages).
+    """
+    first_agent = next((m["seq"] for m in msgs if m["role"] == "agent"), None)
+    stuck = [m for m in msgs if m["role"] == "bot" and m.get("decision") == "escalate"
+             and (first_agent is None or m["seq"] < first_agent)]
+    if stuck:
+        before = [m for m in msgs if m["role"] == "user" and m["seq"] < stuck[-1]["seq"]]
+        question = before[-1] if before else None
+        start = question["seq"] if question else stuck[-1]["seq"]
+    else:
+        question = next((m for m in msgs if m["role"] == "user"), None)
+        start = question["seq"] if question else 0
+    return question, [m for m in msgs if m["seq"] >= start and m["role"] in ("user", "agent")]
+
+
+def advice_text(msgs: list[dict]) -> str:
+    """Only the agent's ADVICE (no greetings, no echo of the customer): what grounding is checked against."""
+    return " ".join(s for m in msgs if m["role"] == "agent" for s in _sentences(m["text"]) if _is_step(s))
+
+
 def extractive(msgs: list[dict]) -> tuple[str, str, list[str]]:
-    """Rule-based article: generic title from the question that got stuck, the agent's advice as steps.
+    """Rule-based article: generic title from the escalated question, the agent's advice as steps.
     Steps are the agent's own sentences (grounded by construction); the cause is never guessed."""
-    stuck = next((m for m in msgs if m["role"] == "bot" and m.get("decision") == "escalate"), None)
-    before = [m for m in msgs if m["role"] == "user" and (stuck is None or m["seq"] < stuck["seq"])]
-    question = before[-1]["text"] if before else next((m["text"] for m in msgs if m["role"] == "user"), "")
+    q, focused = focus(msgs)
+    question = q["text"] if q else ""
     # symptoms: the question plus the first descriptive follow-up from the customer
-    follow = next((m["text"] for m in msgs if m["role"] == "user" and stuck and m["seq"] > stuck["seq"]
+    follow = next((m["text"] for m in focused if m["role"] == "user" and q and m["seq"] > q["seq"]
                    and len(m["text"].split()) >= 5 and not _FILLER.search(m["text"])), None)
     symptoms = depersonalise(question).rstrip("?")
     if follow:
         symptoms += ". " + depersonalise(follow).rstrip("?")
-    steps = [to_step(s) for m in msgs if m["role"] == "agent" for s in _sentences(m["text"]) if _is_step(s)]
+    steps = [to_step(s) for m in focused if m["role"] == "agent" for s in _sentences(m["text"]) if _is_step(s)]
     return depersonalise(question), symptoms + ".", steps
 
 
 def transcript_text(msgs: list[dict]) -> str:
-    who = {"user": "Customer", "bot": "Helix bot", "agent": "Agent"}
+    """Customer and agent lines only (the bot's answers are never shown to the summariser)."""
+    who = {"user": "Customer", "agent": "Agent"}
     return "\n".join(f"{who[m['role']]}: {m['text']}" for m in msgs if m["role"] in who)
 
 
 def llm_draft(msgs: list[dict]) -> tuple[dict | None, str]:
     """Ask Ollama for an article. Returns ({title, symptoms, cause, steps} or None if unparseable, raw text)."""
-    user_msg = f"<transcript>\n{transcript_text(msgs)}\n</transcript>"
+    user_msg = f"<transcript>\n{transcript_text(focus(msgs)[1])}\n</transcript>"
     r = httpx.post(f"{OLLAMA_URL}/api/chat", timeout=OLLAMA_TIMEOUT, json={
         "model": OLLAMA_MODEL, "stream": False, "keep_alive": "30m",
         "options": {"temperature": 0.1, "num_predict": 220},
@@ -243,7 +279,7 @@ def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict], dict | None]:
     """
     checks: list[dict] = []
     alt: dict | None = None
-    agent_text = " ".join(m["text"] for m in msgs if m["role"] == "agent")
+    advice = advice_text(focus(msgs)[1])
     title = body = None
     method = "rule-based"
 
@@ -254,14 +290,27 @@ def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict], dict | None]:
                 checks.append({"check": "llm_format", "ok": False, "detail": "LLM did not produce a TITLE and STEPS"})
                 alt = {"problem": None, "fix": redact(raw)[0], "grounding": None, "why": "wrong format"}
             else:
-                g = grounding(" ".join(got["steps"]), agent_text)
+                # Each step must be the agent's advice; steps the agent never gave are dropped.
+                kept = [st for st in got["steps"] if grounding(st, advice) >= GROUNDING_MIN]
+                dropped = len(got["steps"]) - len(kept)
+                if dropped:
+                    checks.append({"check": "steps", "ok": False,
+                                   "detail": f"{dropped} AI step(s) the agent never gave were removed"})
+                g = grounding(" ".join(kept), advice) if kept else 0.0
                 cause = got["cause"]
-                if cause.lower().strip(". ") != NOT_CONFIRMED.lower() and grounding(cause, agent_text) < GROUNDING_MIN:
+                if cause.lower().strip(". ") != NOT_CONFIRMED.lower() and grounding(cause, advice) < CAUSE_GROUNDING_MIN:
                     checks.append({"check": "cause", "ok": False,
                                    "detail": f"AI cause not stated by the agent, replaced: \"{cause[:80]}\""})
                     cause = NOT_CONFIRMED
-                ai_body = compose(got["symptoms"] or "-", cause, got["steps"])
-                if g >= GROUNDING_MIN:
+                # The title/symptoms must be about the ESCALATED question, not another topic in the chat.
+                q_text = " ".join(m["text"] for m in focus(msgs)[1] if m["role"] == "user") + " " + advice
+                if grounding(got["title"] + " " + got["symptoms"], q_text) < TOPIC_MIN:
+                    rule_title, rule_symptoms, _ = extractive(msgs)
+                    checks.append({"check": "topic", "ok": False,
+                                   "detail": f"AI title \"{got['title'][:60]}\" is not about the escalated question; replaced"})
+                    got = {**got, "title": rule_title, "symptoms": rule_symptoms}
+                ai_body = compose(got["symptoms"] or "-", cause, kept or got["steps"])
+                if kept and g >= GROUNDING_MIN:
                     title, body, method = got["title"], ai_body, f"{OLLAMA_MODEL} ({SUMMARY_PROMPT_VERSION})"
                     checks.append({"check": "grounding", "ok": True, "detail": f"{g:.0%} of the steps are in the agent's words"})
                 else:
@@ -423,6 +472,28 @@ def get_draft(draft_id: str):
     return _get(draft_id)
 
 
+def _tickets_request(method: str, path: str, body: dict | None = None) -> dict:
+    """Call the Ticket Service with a timeout and up to 3 tries. Resolve is idempotent, so retrying is safe.
+    4xx answers are returned as errors straight away; a non-JSON error body no longer crashes."""
+    for attempt in range(3):
+        try:
+            r = httpx.request(method, f"{TICKETS_URL}{path}", json=body, timeout=3.0)
+            if r.status_code < 500:
+                break
+        except httpx.TransportError:
+            r = None
+        if attempt == 2:
+            raise HTTPException(503, "Ticket Service unavailable; try again")
+        time.sleep(0.3 * 2 ** attempt)
+    if r.status_code >= 400:
+        try:
+            detail = r.json().get("detail", r.text)
+        except ValueError:
+            detail = r.text[:200]
+        raise HTTPException(r.status_code, f"Ticket Service: {detail}")
+    return r.json()
+
+
 @app.post("/drafts/{draft_id}/approve")
 def approve(draft_id: str, body: ApproveIn):
     """Agent approves (possibly edited) text: resolve the ticket; Knowledge indexes it from incident.resolved."""
@@ -436,19 +507,16 @@ def approve(draft_id: str, body: ApproveIn):
     resolution, _ = redact(body.resolution)
     if guard.looks_like_injection(summary) or guard.looks_like_injection(resolution):
         raise HTTPException(422, "the text contains instruction-like phrases; edit it before approving")
+    # A ticket that is already RESOLVED would accept a repeat resolve as a no-op and emit NO
+    # event, so the article would silently never reach the knowledge base while the console
+    # said "added". Refuse instead, and say how to proceed.
+    current = _tickets_request("GET", f"/tickets/{d['ticket_id']}")
+    if current.get("status") == "RESOLVED":
+        raise HTTPException(409, f"{d['ticket_id']} was already resolved, so this summary would not be added. "
+                                 "Reopen the ticket first, or reject this draft.")
     payload = {"responder_id": body.responder_id, "summary": summary, "resolution": resolution,
                "add_to_knowledge_base": body.add_to_knowledge_base}
-    for attempt in range(3):                                   # timeout + retry; resolve is idempotent
-        try:
-            r = httpx.post(f"{TICKETS_URL}/tickets/{d['ticket_id']}/resolve", json=payload, timeout=3.0)
-            if r.status_code < 500:
-                break
-        except httpx.TransportError:
-            if attempt == 2:
-                raise HTTPException(503, "Ticket Service unavailable; try again")
-        time.sleep(0.3 * 2 ** attempt)
-    if r.status_code >= 400:
-        raise HTTPException(r.status_code, f"Ticket Service: {r.json().get('detail', r.text)}")
+    _tickets_request("POST", f"/tickets/{d['ticket_id']}/resolve", payload)
     _decide(draft_id, "APPROVED", body.responder_id,
             "added to knowledge base" if body.add_to_knowledge_base else "resolved, not added to knowledge base")
     DECIDED.labels("approved", str(body.add_to_knowledge_base).lower()).inc()

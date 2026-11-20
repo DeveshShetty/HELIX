@@ -308,7 +308,21 @@ def ack_page(page_id: str, body: AckIn):
 
 @app.post("/incidents/{ticket_id}/resolve")
 def resolve_incident(ticket_id: str, body: ResolveIn):
-    return tickets_call("POST", f"/tickets/{ticket_id}/resolve", body.model_dump())
+    result = tickets_call("POST", f"/tickets/{ticket_id}/resolve", body.model_dump())
+    release_waiting_customer(ticket_id)
+    return result
+
+
+def release_waiting_customer(ticket_id: str) -> None:
+    """A customer still queued for a live chat on a ticket that is now resolved would otherwise
+    wait forever (and the bot would stay silent for them). Best effort: the ticket is resolved
+    either way."""
+    try:
+        conv = chat_call("GET", f"/conversations/by-ticket/{ticket_id}", attempts=1)
+        if conv.get("status") == "WAITING_AGENT":
+            chat_call("POST", f"/conversations/{conv['conversation_id']}/leave", {"reason": "resolved"}, attempts=1)
+    except HTTPException:
+        pass
 
 
 @app.post("/incidents/{ticket_id}/reopen")

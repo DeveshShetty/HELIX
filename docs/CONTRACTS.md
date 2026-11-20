@@ -191,6 +191,7 @@ messages link to their decision, so the transcript records why the bot got stuck
 
 | Endpoint | Purpose |
 |---|---|
+| `POST /conversations/{cid}/leave` `{reason: customer\|resolved}` | stop waiting for an agent: `WAITING_AGENT → BOT` (ticket stays open). On-Call calls it with `resolved` when a ticket is resolved from the console while the customer is still queued |
 | `POST /conversations/{cid}/handoff` | customer chose "chat with an agent" (needs a ticket); status `BOT → WAITING_AGENT` |
 | `POST /conversations/{cid}/messages` `{role: user\|agent, author, text}` | live message; the first agent message makes it `LIVE` |
 | `GET /conversations/{cid}?after=<seq>` | transcript (+ new messages since `seq`, for polling) |
@@ -212,7 +213,7 @@ Consumes `conversation.closed`, drafts PROBLEM/FIX (Ollama few-shot prompt
 |---|---|
 | `GET /drafts?status=PENDING` | drafts waiting for an agent (with `checks`, `method`, `transcript`) |
 | `GET /drafts/{draft_id}` | one draft |
-| `POST /drafts/{draft_id}/approve` `{responder_id, summary, resolution, add_to_knowledge_base}` | re-checks the (edited) text, then resolves the ticket → `incident.resolved` → Knowledge |
+| `POST /drafts/{draft_id}/approve` `{responder_id, summary, resolution, add_to_knowledge_base}` | re-checks the (edited) text, then resolves the ticket → `incident.resolved` → Knowledge. `409` if the ticket is already resolved (a repeat resolve emits no event, so the article would silently not be indexed) |
 | `POST /drafts/{draft_id}/reject` `{responder_id, reason}` | discard |
 
 Checks: `grounding` (at least 60% of an LLM fix's words must appear in the agent's

@@ -139,6 +139,29 @@ The few-shot FIX dropped "Team and Enterprise plans only": faithful but incomple
 reason a person still approves every draft. Ending the chat now returns in ~50 ms
 (drafting moved off the request path); the draft appeared ~8 s later.
 
+## E10. Summary drafted about the wrong problem (found by a hands-on test)
+
+One chat held two questions: an Android file problem the bot answered from the knowledge
+base, then an AWS deployment problem that was escalated to alice. The summariser was given
+the whole transcript, including the bot's answer. llama3.2:1b titled the article "Android
+app file opening issues", copied a step from the bot's answer ("check the permissions for
+location and files"), and invented a cause. The grounding check passed it (55%) because the
+agent's echo of the customer ("I am facing issues with aws") counted as agent text.
+
+Fixes, verified by replaying the same AI output through the new checks:
+- only the escalated question and the customer/agent messages after it are summarised;
+  the bot's answers are never shown to the summariser
+- grounding is computed per step against the agent's advice sentences only (greetings and
+  echoes excluded); unsupported steps are dropped (1 of 3 here)
+- the cause must reach 70% overlap with the agent's advice, else "Not confirmed"
+- the title/symptoms must overlap the escalated question, else the rule-based title is used
+Result: "Issues with the AWS deployment", two steps from alice's advice, cause not confirmed.
+
+Two more bugs found while reviewing: a customer queued for an agent stayed in
+`WAITING_AGENT` forever if nobody joined (the bot ignored them from then on), fixed with
+"Stop waiting" and automatic release when the ticket is resolved; and approving a summary
+for an already-resolved ticket reported success while nothing was indexed, now a 409.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).

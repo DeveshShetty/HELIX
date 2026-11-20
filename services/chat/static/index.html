@@ -4,12 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Helix Cloud Support</title>
+<script>/* apply the saved theme (or the OS setting) before the page paints */(function(){var t=localStorage.getItem("helix-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t;})();</script>
 <style>
+
+  /* Helix theme: light by default; dark via [data-theme=dark] (set from the toggle or the OS). */
   :root {
-    --bg: #f4f5f7; --panel: #fff; --ink: #1d2330; --muted: #6b7280; --line: #e3e6eb;
-    --accent: #2f5bea; --accent-soft: #eef2fd; --ok: #16794c; --ok-bg: #e5f5ed; --warn: #9a5b00; --warn-bg: #fdf1dc;
-    --bad: #b42318; --bad-bg: #fde8e7; --deg: #6941c6; --deg-bg: #efe9fb;
+    --bg: #f3f5f4; --panel: #ffffff; --sunken: #f7f9f8; --ink: #17201f; --muted: #5d6b69; --line: #dbe2e0;
+    --accent: #0f7c74; --on-accent: #ffffff; --accent-soft: #e4f2f0; --accent-line: #b9dcd8; --focus: #0f7c74;
+    --ok: #1f7a4d; --ok-bg: #e3f3ea; --warn: #9a5b00; --warn-bg: #fbf0dc; --bad: #b42318; --bad-bg: #fde8e7;
+    --deg: #6941c6; --deg-bg: #efe9fb; --agent-bg: #fdf5e6; --agent-line: #eed8ac;
+    --rb: var(--accent); --faq: var(--ok); --inc: var(--warn); --learned: var(--deg);
+    color-scheme: light;
   }
+  :root[data-theme="dark"] {
+    --bg: #0e1514; --panel: #172220; --sunken: #121b1a; --ink: #e4ecea; --muted: #93a5a2; --line: #2b3b39;
+    --accent: #3cc0b2; --on-accent: #06201d; --accent-soft: #16322f; --accent-line: #24504b; --focus: #3cc0b2;
+    --ok: #5cc98f; --ok-bg: #15301f; --warn: #e8ad57; --warn-bg: #33270f; --bad: #f08a7f; --bad-bg: #3a1a17;
+    --deg: #b9a3f0; --deg-bg: #2a2140; --agent-bg: #2a2314; --agent-line: #4d3f1f;
+    color-scheme: dark;
+  }
+  body { transition: background-color .2s, color .2s; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  h1 .mark { width: 22px; height: 22px; color: var(--accent); flex: none; }
+  h1.brand { display: flex; align-items: center; gap: 8px; }
+  .theme { font: inherit; font-size: 15px; line-height: 1; width: 34px; height: 30px; border-radius: 8px; cursor: pointer;
+           border: 1px solid var(--line); background: var(--panel); color: var(--ink); flex: none; }
+  .theme:hover { border-color: var(--accent); color: var(--accent); }
+  input, select, textarea { color: var(--ink); background-color: var(--panel); }
+  ::placeholder { color: var(--muted); opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { *, body { transition: none !important; animation: none !important; } }
   * { box-sizing: border-box; }
   body { margin: 0; font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
          background: var(--bg); color: var(--ink); height: 100vh; display: flex; flex-direction: column; }
@@ -31,7 +54,7 @@
   main { flex: 1; overflow-y: auto; padding: 24px 20px; }
   .thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
   .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; white-space: pre-wrap; word-wrap: break-word; }
-  .user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .user { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 4px; }
   .bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
   .note { margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; white-space: normal; }
   .note.ticket { background: var(--accent-soft); color: var(--ink); }
@@ -55,17 +78,19 @@
   .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
   .bar u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
   .typing { color: var(--muted); font-style: italic; }
-  .agent { align-self: flex-start; background: #fff7e6; border: 1px solid #f2d9a6; border-bottom-left-radius: 4px; }
+  .agent { align-self: flex-start; background: var(--agent-bg); border: 1px solid var(--agent-line); border-bottom-left-radius: 4px; }
   .who { display: block; font-size: 12px; font-weight: 600; color: var(--warn); margin-bottom: 2px; }
   .system { align-self: center; font-size: 13px; color: var(--muted); text-align: center; max-width: 90%; }
   .choices { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; white-space: normal; }
   .choices button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer;
                     border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
-  .choices button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .choices button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .choices button:disabled { opacity: .5; cursor: default; }
-  .livebar { display: none; background: #fff7e6; border-bottom: 1px solid #f2d9a6; color: var(--warn);
+  .livebar { display: none; background: var(--agent-bg); border-bottom: 1px solid var(--agent-line); color: var(--warn);
              font-size: 13px; padding: 8px 20px; text-align: center; }
   body.live .livebar { display: block; }
+  .livebar .leave { margin-left: 10px; font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 6px;
+                    border: 1px solid var(--agent-line); background: var(--panel); color: var(--warn); cursor: pointer; }
   .empty { text-align: center; color: var(--muted); margin-top: 8vh; }
   .empty h2 { color: var(--ink); font-size: 22px; margin-bottom: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
@@ -79,21 +104,23 @@
   footer { background: var(--panel); border-top: 1px solid var(--line); padding: 14px 20px; }
   form { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; }
   input[type=text] { flex: 1; font: inherit; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; outline: none; }
-  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #2f5bea22; }
-  button.send { font: inherit; font-weight: 600; padding: 0 20px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; cursor: pointer; }
+  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  button.send { font: inherit; font-weight: 600; padding: 0 20px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); cursor: pointer; }
   button.send:disabled { opacity: .5; cursor: default; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Helix Cloud Support</h1>
+  <h1 class="brand"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 2c0 7 10 7 10 10s-10 3-10 10"/><path d="M17 2c0 7-10 7-10 10s10 3 10 10"/><path d="M9.5 6.5h5M9.5 17.5h5" stroke-width="1.6"/></svg>Helix Cloud Support</h1>
   <div class="status" id="status"></div>
   <button class="newchat" id="newChat" type="button" title="Start a fresh conversation">New conversation</button>
   <label class="switch" title="Show how the assistant made each decision (for demos)">
     <input type="checkbox" id="techToggle"> Technical details
   </label>
+  <button class="theme" id="themeBtn" type="button" aria-label="Switch to dark mode">&#9790;</button>
 </header>
-<div class="livebar" id="livebar">Waiting for a support agent…</div>
+<div class="livebar" id="livebar"><span id="livetext">Waiting for a support agent…</span>
+  <button class="leave" id="leaveBtn" type="button">Stop waiting</button></div>
 
 <main id="main">
   <div class="thread" id="thread">
@@ -256,9 +283,12 @@ async function poll() {
       // user/bot messages are already on screen
     }
     if (c.messages.length) scrollDown();
-    livebar.textContent = c.status === 'LIVE' ? `You're chatting with ${c.agent_id} from Helix support`
-                                              : 'Waiting for a support agent… keep this window open';
-    if (c.status === 'CLOSED') stopLive();
+    document.getElementById('livetext').textContent = c.status === 'LIVE'
+      ? `You're chatting with ${c.agent_id} from Helix support`
+      : 'Waiting for a support agent… keep this window open';
+    document.getElementById('leaveBtn').style.display = c.status === 'WAITING_AGENT' ? '' : 'none';
+    // CLOSED: the agent ended the chat. BOT: the customer stopped waiting, or the ticket was resolved.
+    if (c.status === 'CLOSED' || c.status === 'BOT') stopLive();
   } catch { /* try again on the next tick */ }
 }
 
@@ -361,10 +391,33 @@ async function ask(text) {
 document.getElementById('form').addEventListener('submit', e => { e.preventDefault(); ask(input.value); });
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => ask(c.dataset.q)));
 document.getElementById('newChat').addEventListener('click', newConversation);
+document.getElementById('leaveBtn').addEventListener('click', async () => {
+  await fetch(`/conversations/${conversationId}/leave`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'customer' }) });
+  await poll();                         // shows the system message and returns to the bot
+});
 restore();
 refreshStatus();
 setInterval(refreshStatus, 5000);
 input.focus();
+</script>
+<script>
+(function () {
+  const btn = document.getElementById('themeBtn');
+  const label = () => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    btn.textContent = dark ? '\u2600' : '\u263E';
+    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.title = btn.getAttribute('aria-label');
+  };
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('helix-theme', next);
+    label();
+  });
+  label();
+})();
 </script>
 </body>
 </html>

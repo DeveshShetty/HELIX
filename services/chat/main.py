@@ -427,6 +427,32 @@ def handoff(cid: str):
     return convs.get(cid)
 
 
+class LeaveIn(BaseModel):
+    reason: str = "customer"            # customer | resolved
+
+
+@app.post("/conversations/{cid}/leave")
+def leave_queue(cid: str, body: LeaveIn):
+    """Stop waiting for an agent and hand the conversation back to the bot.
+
+    Without this, a customer whose agent never joined (or whose ticket was resolved
+    from the console form instead) stayed in WAITING_AGENT forever: the bot ignored
+    every later message in that conversation. The ticket itself stays open.
+    """
+    conv = _conv_or_404(cid)
+    if conv["status"] != "WAITING_AGENT":
+        return conv                     # nothing to do (BOT, LIVE or CLOSED): idempotent
+    convs.set(cid, status="BOT")
+    text = ("Your request has been resolved by our support team. You can keep asking me questions here."
+            if body.reason == "resolved" else
+            f"You've stopped waiting for an agent. Your request {conv['ticket_id']} is still open and an "
+            "engineer will follow up. You can keep asking me questions here.")
+    convs.add(cid, "system", "helix", text)
+    _update_live_gauge()
+    print(f"[handoff] {cid} left the agent queue ({body.reason})", flush=True)
+    return convs.get(cid)
+
+
 @app.post("/conversations/{cid}/messages")
 def post_message(cid: str, body: MessageIn):
     conv = _conv_or_404(cid)
