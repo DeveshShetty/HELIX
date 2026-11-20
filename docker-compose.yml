@@ -2,6 +2,10 @@
 x-service-env: &service-env
   RABBIT_HOST: rabbitmq
   RABBIT_EXCHANGE: support.events
+  # retry limits (common/retry.py, common/messaging.py, common/db.py); override for demos
+  MAX_DELIVERY_ATTEMPTS: ${MAX_DELIVERY_ATTEMPTS:-5}        # consumer: then dead-letter
+  OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-10}           # outbox relay: then park the event
+  ESCALATION_MAX_ATTEMPTS: ${ESCALATION_MAX_ATTEMPTS:-10}   # chat escalation worker: then alert
 
 x-depends-rabbit: &depends-rabbit
   rabbitmq:

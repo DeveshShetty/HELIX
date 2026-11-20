@@ -160,12 +160,19 @@ def utc_midnight() -> float:
 
 # ------------------------------------------------------------------ escalation (outbox)
 
+ESCALATION_MAX_ATTEMPTS = int(os.getenv("ESCALATION_MAX_ATTEMPTS", "10"))
+ESCALATIONS_FAILED = Counter("escalations_failed_total", "Escalations given up after ESCALATION_MAX_ATTEMPTS")
+
+
 def try_open_ticket(decision_id: str, payload: dict) -> str | None:
     """One attempt to turn a pending escalation into a ticket. Returns the ticket id or None."""
     try:
         t = clients.open_ticket(f"chat-{decision_id}", payload)
     except Exception as exc:
-        store.escalation_failed(decision_id, repr(exc))
+        if store.escalation_failed(decision_id, repr(exc), max_attempts=ESCALATION_MAX_ATTEMPTS) == "gave_up":
+            ESCALATIONS_FAILED.inc()
+            print(f"[escalation] ERROR gave up on {decision_id} after {ESCALATION_MAX_ATTEMPTS} attempts: "
+                  f"{exc!r}; customer request needs manual follow-up", flush=True)
         return None
     store.escalation_done(decision_id, t["ticket_id"])
     if payload.get("conversation_id"):

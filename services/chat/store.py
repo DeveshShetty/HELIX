@@ -13,6 +13,7 @@ pending_escalations: an OUTBOX for escalations. Every failure path ends in an
 import json
 import time
 
+from common import retry
 from common.db import connect
 
 DDL = """
@@ -150,15 +151,33 @@ class DecisionStore:
         finally:
             conn.close()
 
-    def escalation_failed(self, decision_id: str, error: str, backoff_cap: float = 30.0) -> None:
+    def escalation_failed(self, decision_id: str, error: str, max_attempts: int = 10,
+                          backoff_cap: float = 60.0) -> str:
+        """Record a failed delivery. Returns "retry" or "gave_up".
+
+        Retries use the shared jittered backoff; after max_attempts the escalation is
+        marked FAILED (no more retries) so the caller can alert, instead of retrying forever.
+        """
         conn = connect(self.db_path)
         try:
             row = conn.execute("SELECT attempts FROM pending_escalations WHERE decision_id=?",
                                (decision_id,)).fetchone()
             attempts = (row["attempts"] if row else 0) + 1
-            delay = min(backoff_cap, 2 ** attempts)
+            if attempts >= max_attempts:
+                conn.execute("UPDATE pending_escalations SET status='FAILED', attempts=?, last_error=? "
+                             "WHERE decision_id=?", (attempts, error[:300], decision_id))
+                return "gave_up"
+            delay = retry.backoff(attempts, 2.0, backoff_cap)
             conn.execute("UPDATE pending_escalations SET attempts=?, last_error=?, next_attempt_at=? "
                          "WHERE decision_id=?", (attempts, error[:300], time.time() + delay, decision_id))
+            return "retry"
+        finally:
+            conn.close()
+
+    def failed_count(self) -> int:
+        conn = connect(self.db_path)
+        try:
+            return conn.execute("SELECT COUNT(*) FROM pending_escalations WHERE status='FAILED'").fetchone()[0]
         finally:
             conn.close()
 

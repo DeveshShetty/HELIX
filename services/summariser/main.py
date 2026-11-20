@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from common import guard
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
+from common.http import request_json
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
 from common.redact import redact
@@ -473,25 +474,9 @@ def get_draft(draft_id: str):
 
 
 def _tickets_request(method: str, path: str, body: dict | None = None) -> dict:
-    """Call the Ticket Service with a timeout and up to 3 tries. Resolve is idempotent, so retrying is safe.
-    4xx answers are returned as errors straight away; a non-JSON error body no longer crashes."""
-    for attempt in range(3):
-        try:
-            r = httpx.request(method, f"{TICKETS_URL}{path}", json=body, timeout=3.0)
-            if r.status_code < 500:
-                break
-        except httpx.TransportError:
-            r = None
-        if attempt == 2:
-            raise HTTPException(503, "Ticket Service unavailable; try again")
-        time.sleep(0.3 * 2 ** attempt)
-    if r.status_code >= 400:
-        try:
-            detail = r.json().get("detail", r.text)
-        except ValueError:
-            detail = r.text[:200]
-        raise HTTPException(r.status_code, f"Ticket Service: {detail}")
-    return r.json()
+    """Call the Ticket Service with the shared retry policy (common/http.py). Resolve is
+    idempotent, so retrying is safe; 4xx answers come back at once."""
+    return request_json(method, f"{TICKETS_URL}{path}", body, name="Ticket Service")
 
 
 @app.post("/drafts/{draft_id}/approve")

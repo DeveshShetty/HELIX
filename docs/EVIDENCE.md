@@ -195,6 +195,49 @@ Prometheus rule `MessagesDeadLettered` in `monitoring/prometheus/rules.yml`.
 Not verified: a dead-lettered message cannot be replayed from the DLQ with a script yet; it
 has to be moved by hand in the RabbitMQ UI.
 
+## E12. One retry policy with jitter and limits; outbox no longer blocks (audit fix 2)
+
+`common/retry.py` (backoff with "equal jitter", max attempts, overall deadline, optional hard
+per-attempt deadline) replaces the three hand-written loops (Chat clients, On-Call `_call`,
+Summariser `_tickets_request`; the last two now share `common/http.request_json`). It is
+also used by the consumer reconnect, the outbox relay and the Chat escalation worker. Run on
+2026-11-21 with demo limits `OUTBOX_MAX_ATTEMPTS=3`, `ESCALATION_MAX_ATTEMPTS=3`.
+
+Jitter (`backoff(attempt, base=1, cap=30)`, three samples per attempt):
+`{1: [0.95, 0.79, 0.77], 2: [1.16, 1.19, 1.78], 3: [3.74, 3.88, 2.83], 6: [15.02, 27.89, 21.22]}`
+
+**Outbox head-of-line blocking fixed** (`scripts/inject_bad_outbox_event.py` puts an
+unroutable event in front of a valid one):
+```
+tickets   [outbox] event 020e9f16-… failed (attempt 1/3): UnroutableError: 1 unroutable message(s) returned
+tickets   [outbox] event 020e9f16-… failed (attempt 2/3): UnroutableError: …
+tickets   [outbox] PARKED event 020e9f16-… after 3 attempts: UnroutableError: …
+knowledge [ingest] T-HOL-99920 reopened (rev 1): withdrawn          <- the event behind it was delivered
+outbox rows by state: [(-1 parked, 1), (1 published, 72)]
+outbox_parked_total{db="tickets.db"} 1.0
+```
+
+**Escalation worker stops instead of retrying forever** (Tickets stopped, one escalating
+question):
+```
+chat  [escalation] ERROR gave up on d-2534f62dc2e8 after 3 attempts: AttemptTimeout('no response within 3.0s'); customer request needs manual follow-up
+escalations_failed_total 1.0;  decision d-2534f62dc2e8 escalation.status = FAILED
+alert EscalationsGivenUp = firing
+```
+
+**A broker outage does not park events** (`demo.py broker-down`, still with the limit at 3):
+3 tickets created while RabbitMQ was stopped, outbox pending 3 → 0 after restart, parked count
+unchanged (only the bad event above). `AMQPConnectionError` stops the relay pass without
+charging an attempt to any event. Consumer reconnects now back off:
+`reconnect attempt 1 … attempt 2 in 1.3s … attempt 3 in 3.2s` (previously a fixed 3 s).
+
+Regression: `demo.py kb-down` unchanged (2.2–2.3 s per failure, then ~250 ms with the breaker
+open).
+
+Trade-off to state in the report: skipping a failed outbox event means later events can be
+published before it. Knowledge already orders by ticket revision; On-Call does not for
+opened/acked (both revision 0, listed as a known limitation).
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).

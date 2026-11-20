@@ -9,3 +9,17 @@ groups:
         annotations:
           summary: "Messages dead-lettered from {{ $labels.queue }}"
           description: "Inspect support.events.dlq in the RabbitMQ UI (http://localhost:15672)."
+      - alert: EscalationsGivenUp
+        # a customer escalation could not reach the Ticket Service after ESCALATION_MAX_ATTEMPTS
+        expr: increase(escalations_failed_total[30m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Chat gave up delivering an escalation to the Ticket Service"
+          description: "pending_escalations rows with status FAILED in chat.db need manual follow-up."
+      - alert: OutboxEventsParked
+        expr: sum by (db) (increase(outbox_parked_total[30m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Outbox events parked in {{ $labels.db }} after repeated publish failures"

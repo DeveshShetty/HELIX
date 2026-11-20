@@ -20,13 +20,13 @@ import os
 import time
 from pathlib import Path
 
-import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from prometheus_client import Counter, Gauge
 from pydantic import BaseModel, Field
 
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
+from common.http import request_json
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
 
@@ -180,19 +180,9 @@ def escalation_loop() -> None:
 
 def _call(base: str, name: str, method: str, path: str, body: dict | None = None,
           attempts: int = 3, timeout: float = 3.0) -> dict:
-    """Timeout + retry with backoff. 4xx are not retried (they are answers, not failures)."""
-    for i in range(attempts):
-        try:
-            r = httpx.request(method, f"{base}{path}", json=body, timeout=timeout)
-            if r.status_code < 500:
-                if r.status_code >= 400:
-                    raise HTTPException(r.status_code, r.json().get("detail", r.text))
-                return r.json()
-        except httpx.TransportError as exc:
-            if i == attempts - 1:
-                raise HTTPException(503, f"{name} unavailable: {exc!r}")
-        time.sleep(0.3 * 2 ** i)
-    raise HTTPException(503, f"{name} unavailable")
+    """Shared policy (common/http.py): retry network errors and 5xx with jittered backoff;
+    4xx are answers, returned at once."""
+    return request_json(method, f"{base}{path}", body, name=name, attempts=attempts, timeout=timeout)
 
 
 def tickets_call(method: str, path: str, body: dict | None = None, attempts: int = 3) -> dict:

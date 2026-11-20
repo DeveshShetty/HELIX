@@ -13,7 +13,6 @@ dead_lettered_total{queue}.
 """
 import json
 import os
-import random
 import time
 import uuid
 from typing import Callable
@@ -21,7 +20,7 @@ from typing import Callable
 import pika
 from prometheus_client import Counter
 
-from common import topology
+from common import retry, topology
 
 EXCHANGE = os.getenv("RABBIT_EXCHANGE", "support.events")
 MAX_DELIVERY_ATTEMPTS = int(os.getenv("MAX_DELIVERY_ATTEMPTS", "5"))
@@ -119,8 +118,7 @@ def handle_failure(ch, queue_name: str, method, properties, body: bytes, exc: Ex
               f"{headers['x-last-error']}", flush=True)
         return "dead-lettered"
 
-    delay = min(CONSUMER_RETRY_CAP, CONSUMER_RETRY_BASE * 2 ** (attempts - 1))
-    sleep(delay / 2 + random.uniform(0, delay / 2))           # backoff with jitter
+    sleep(retry.backoff(attempts, CONSUMER_RETRY_BASE, CONSUMER_RETRY_CAP))   # backoff with jitter
     headers[ATTEMPT_HEADER] = attempts + 1
     ch.basic_publish(exchange="", routing_key=queue_name, body=body,   # back of its own queue
                      properties=pika.BasicProperties(headers=headers, **props))
@@ -133,11 +131,17 @@ def handle_failure(ch, queue_name: str, method, properties, body: bytes, exc: Ex
 
 def consume_forever(queue_name: str, routing_keys: list[str],
                     handler: Callable[[dict], None]) -> None:
-    """Consume with automatic reconnect. A failing message is retried, then dead-lettered."""
+    """Consume with automatic reconnect. A failing message is retried, then dead-lettered.
+
+    Reconnects back off exponentially with jitter (common/retry.backoff, 1 s to 30 s) and
+    reset once a connection succeeds, so a long broker outage is not hammered every 3 s.
+    """
+    failures = 0
     while True:
         connection = None
         try:
             connection = pika.BlockingConnection(connection_parameters())
+            failures = 0
             channel = connection.channel()
             topology.declare(channel, EXCHANGE)
             channel.queue_declare(queue=queue_name, durable=True)
@@ -160,8 +164,10 @@ def consume_forever(queue_name: str, routing_keys: list[str],
             print(f"[rabbit] consuming {queue_name} <- {routing_keys}", flush=True)
             channel.start_consuming()
         except Exception as exc:
-            print(f"[rabbit] {queue_name} disconnected: {exc}; retrying in 3s", flush=True)
-            time.sleep(3)
+            failures += 1
+            delay = retry.backoff(failures, base=1.0, cap=30.0)
+            print(f"[rabbit] {queue_name} disconnected: {exc}; reconnect attempt {failures} in {delay:.1f}s", flush=True)
+            time.sleep(delay)
         finally:
             try:
                 if connection and connection.is_open:
