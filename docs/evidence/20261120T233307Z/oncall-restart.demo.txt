@@ -1,0 +1,7 @@
+
+>>> Escalate a question; On-Call pages alice
+    pages: [('alice', 'PENDING')]
+
+>>> docker compose restart oncall (mid-timer). Deadlines are in the DB, so the escalation continues
+    waiting for the 30s ack timeout…
+    pages: [('bob', 'PENDING'), ('alice', 'TIMED_OUT')]

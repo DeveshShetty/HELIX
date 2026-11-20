@@ -1,0 +1,9 @@
+
+>>> docker compose stop rabbitmq, then create 3 tickets
+    created T-000076 (the Ticket Service does not need the broker to accept work)
+    created T-000077 (the Ticket Service does not need the broker to accept work)
+    created T-000078 (the Ticket Service does not need the broker to accept work)
+    outbox: {'pending': 3, 'published': 104}
+
+>>> docker compose start rabbitmq: the relay drains the outbox
+    outbox: {'pending': 0, 'published': 107} -> all events published; On-Call pages for them now

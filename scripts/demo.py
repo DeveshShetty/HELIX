@@ -201,7 +201,7 @@ def poison():
     step("Wait for the valid event, then for the poison message to use up its attempts")
     ok_seen = False
     for _ in range(60):
-        logs = subprocess.run(["docker", "compose", "logs", "knowledge", "--since", "3m"], capture_output=True, text=True).stdout
+        logs = subprocess.run(["docker", "compose", "logs", "knowledge", "--tail", "300"], capture_output=True, text=True).stdout
         ok_seen = ok_seen or any(ids.get("valid", "?") in l and "reopened" in l for l in logs.splitlines())
         if dlq_depth() > before and ok_seen:
             break

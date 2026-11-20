@@ -1,0 +1,7 @@
+
+>>> Replay the latest incident.resolved and incident.opened events (at-least-once delivery)
+    replayed incident.resolved for T-000032 (event_id f54a4db7-4b59-47f6-999d-b15ba5cbec4d)
+    replayed incident.opened for T-000079 (event_id 5380bdd2-dd0f-4051-b9e9-12f74c32ebb7)
+    knowledge-1  | 2026-11-20T23:35:49.150Z INFO  service=knowledge corr=T-000032 knowledge | [ingest] T-000032 resolved (rev 1): duplicate
+    oncall-1  | 2026-11-20T23:35:49.136Z WARNING service=oncall corr=T-000032 oncall | [oncall] duplicate incident.resolved for T-000032 ignored
+    oncall-1  | 2026-11-20T23:35:50.236Z WARNING service=oncall corr=req-189f55b511a0 oncall | [oncall] duplicate incident.opened for T-000079 ignored

@@ -1,0 +1,8 @@
+
+>>> docker compose stop tickets, then ask something the KB cannot answer
+    escalate reason=low_confidence         degraded=True  ticket=queued     6816 ms
+    user sees: I'm not sure I have the right answer for that, and I'd rather not guess. Our support system is busy right now, but your question is saved (reference d-954249ef0bc0) and will reach the team automatically.
+    escalations waiting: 1
+
+>>> docker compose start tickets: the chat outbox worker delivers the escalation
+    delivered as T-000075 after 3 failed attempt(s); nothing lost, no duplicate (same Idempotency-Key)

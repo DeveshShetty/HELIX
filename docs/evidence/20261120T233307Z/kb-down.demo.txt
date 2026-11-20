@@ -1,0 +1,19 @@
+
+>>> Knowledge Base healthy: question answered
+    answer   reason=grounded               degraded=False ticket=-          1117 ms
+
+>>> docker compose stop knowledge
+
+>>> Ask 5 times: escalates (never guesses); after 3 failures the circuit OPENS and calls fail fast
+    escalate reason=kb_unavailable         degraded=True  ticket=T-000070   3153 ms
+    escalate reason=kb_unavailable         degraded=True  ticket=T-000071   2935 ms
+    escalate reason=kb_unavailable         degraded=True  ticket=T-000072   2408 ms
+    escalate reason=kb_unavailable         degraded=True  ticket=T-000073    473 ms
+    escalate reason=kb_unavailable         degraded=True  ticket=T-000074    510 ms
+    breaker: OPEN
+
+>>> docker compose start knowledge, wait for the breaker's open timeout (15 s)
+
+>>> Half-open probe succeeds -> circuit CLOSED -> answering again
+    answer   reason=grounded               degraded=False ticket=-           514 ms
+    breaker: CLOSED

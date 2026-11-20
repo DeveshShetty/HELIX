@@ -1,0 +1,750 @@
+summariser-1  | INFO:     127.0.0.1:60282 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:38660 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:35476 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:51898 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:52368 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:54706 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:56708 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:47754 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:53340 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:42224 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:54898 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:49188 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.1:47404 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:34476 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:45174 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:60078 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:60214 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:58948 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.1:42750 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:34846 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:35142 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:56932 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:49324 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:43390 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:52372 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:49868 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:58782 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:54968 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:28.554Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Unexpected connection close detected: ConnectionClosedByBroker: (320) "CONNECTION_FORCED - broker forced connection closure with reason 'shutdown'"
+summariser-1  | 2026-11-20T23:34:28.616Z WARNING service=summariser corr=- helix.rabbit | [rabbit] summariser.conversations disconnected: (320, "CONNECTION_FORCED - broker forced connection closure with reason 'shutdown'"); reconnect attempt 1 in 0.8s
+summariser-1  | INFO:     127.0.0.1:42522 - "GET /health HTTP/1.1" 503 Service Unavailable
+summariser-1  | 2026-11-20T23:34:29.723Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=11, family=2, type=1, proto=6, laddr=('172.23.0.6', 59462)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:29.724Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:29.727Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:35.705Z ERROR service=summariser corr=- pika.adapters.utils.selector_ioloop_adapter | Address resolution failed: gaierror(-2, 'Name or service not known')
+summariser-1  | 2026-11-20T23:34:35.707Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | getaddrinfo failed: gaierror(-2, 'Name or service not known').
+summariser-1  | 2026-11-20T23:34:37.713Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=13, family=2, type=1, proto=6, laddr=('172.23.0.6', 57426)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:37.713Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:37.713Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:37.714Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+summariser-1  | 2026-11-20T23:34:37.714Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:37.715Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:37.716Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Error in _create_connection().
+summariser-1  | Traceback (most recent call last):
+summariser-1  |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+summariser-1  |     raise self._reap_last_connection_workflow_error(error)
+summariser-1  | pika.exceptions.AMQPConnectionError
+summariser-1  | 2026-11-20T23:34:37.736Z WARNING service=summariser corr=- helix.rabbit | [rabbit] summariser.conversations disconnected: ; reconnect attempt 2 in 2.0s
+summariser-1  | 2026-11-20T23:34:39.741Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=17, family=2, type=1, proto=6, laddr=('172.23.0.6', 57436)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:39.742Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:39.742Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | INFO:     127.0.0.1:48110 - "GET /health HTTP/1.1" 503 Service Unavailable
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:41.744Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=17, family=2, type=1, proto=6, laddr=('172.23.0.6', 57450)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:41.745Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:41.745Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:43.748Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=17, family=2, type=1, proto=6, laddr=('172.23.0.6', 38490)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:43.748Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:43.748Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:43.748Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+summariser-1  | 2026-11-20T23:34:43.748Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:43.748Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:43.749Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Error in _create_connection().
+summariser-1  | Traceback (most recent call last):
+summariser-1  |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+summariser-1  |     raise self._reap_last_connection_workflow_error(error)
+summariser-1  | pika.exceptions.AMQPConnectionError
+summariser-1  | 2026-11-20T23:34:43.749Z WARNING service=summariser corr=- helix.rabbit | [rabbit] summariser.conversations disconnected: ; reconnect attempt 3 in 2.5s
+knowledge-1   | INFO:     172.23.0.1:60964 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.7:40878 - "POST /search HTTP/1.1" 200 OK
+knowledge-1   | INFO:     Shutting down
+knowledge-1   | INFO:     Waiting for application shutdown.
+knowledge-1   | INFO:     Application shutdown complete.
+knowledge-1   | INFO:     Finished server process [1]
+knowledge-1   | INFO:     Started server process [1]
+knowledge-1   | INFO:     Waiting for application startup.
+knowledge-1   | INFO:     Application startup complete.
+knowledge-1   | INFO:     Uvicorn running on http://0.0.0.0:8004 (Press CTRL+C to quit)
+knowledge-1   | 2026-11-20T23:33:34.286Z INFO  service=knowledge corr=- knowledge | [seed] 39 seed documents; active index hash-v1-20261120T225640
+knowledge-1   | 2026-11-20T23:33:34.287Z INFO  service=knowledge corr=- knowledge | [startup] ready
+knowledge-1   | INFO:     172.23.0.1:33682 - "GET /health HTTP/1.1" 503 Service Unavailable
+knowledge-1   | 2026-11-20T23:33:34.755Z INFO  service=knowledge corr=- helix.rabbit | [rabbit] consuming knowledge.incident-lifecycle <- ['incident.resolved', 'incident.reopened']
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.1:33686 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:53218 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:44542 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:46.220Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=17, family=2, type=1, proto=6, laddr=('172.23.0.6', 38498)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:46.221Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:46.221Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:48.225Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=17, family=2, type=1, proto=6, laddr=('172.23.0.6', 38510)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:48.226Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | INFO:     172.23.0.7:45402 - "POST /search HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:48614 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.7:37802 - "POST /search HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:48.226Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:50.230Z ERROR service=summariser corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=17, family=2, type=1, proto=6, laddr=('172.23.0.6', 38516)>; error=111 (Connection refused)
+summariser-1  | 2026-11-20T23:34:50.230Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+summariser-1  | 2026-11-20T23:34:50.230Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:50.230Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+summariser-1  | 2026-11-20T23:34:50.231Z ERROR service=summariser corr=- pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | 2026-11-20T23:34:50.231Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | INFO:     127.0.0.1:55320 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:50.231Z ERROR service=summariser corr=- pika.adapters.blocking_connection | Error in _create_connection().
+summariser-1  | Traceback (most recent call last):
+summariser-1  |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+summariser-1  |     raise self._reap_last_connection_workflow_error(error)
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | pika.exceptions.AMQPConnectionError
+knowledge-1   | INFO:     127.0.0.1:58636 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:28.471Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Unexpected connection close detected: ConnectionClosedByBroker: (320) "CONNECTION_FORCED - broker forced connection closure with reason 'shutdown'"
+knowledge-1   | 2026-11-20T23:34:28.475Z WARNING service=knowledge corr=- helix.rabbit | [rabbit] knowledge.incident-lifecycle disconnected: (320, "CONNECTION_FORCED - broker forced connection closure with reason 'shutdown'"); reconnect attempt 1 in 0.7s
+knowledge-1   | 2026-11-20T23:34:29.206Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 42656)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:29.207Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:29.208Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:50.232Z WARNING service=summariser corr=- helix.rabbit | [rabbit] summariser.conversations disconnected: ; reconnect attempt 4 in 6.5s
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:31.213Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 42670)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:31.213Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:31.213Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | INFO:     127.0.0.1:46636 - "GET /health HTTP/1.1" 503 Service Unavailable
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:36.777Z ERROR service=knowledge corr=- pika.adapters.utils.selector_ioloop_adapter | Address resolution failed: gaierror(-2, 'Name or service not known')
+knowledge-1   | 2026-11-20T23:34:36.779Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | getaddrinfo failed: gaierror(-2, 'Name or service not known').
+knowledge-1   | 2026-11-20T23:34:36.779Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - gaierror(-2, 'Name or service not known'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+summariser-1  | INFO:     127.0.0.1:59506 - "GET /health HTTP/1.1" 503 Service Unavailable
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | 2026-11-20T23:34:56.907Z INFO  service=summariser corr=- helix.rabbit | [rabbit] consuming summariser.conversations <- ['conversation.closed']
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:32962 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.8:53772 - "GET /drafts?status=PENDING HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:36.780Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - gaierror(-2, 'Name or service not known'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:36.780Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - gaierror(-2, 'Name or service not known'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+summariser-1  | INFO:     127.0.0.1:53670 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:53798 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:58576 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:44130 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:36484 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:53858 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+summariser-1  | INFO:     127.0.0.1:43286 - "GET /health HTTP/1.1" 200 OK
+summariser-1  | INFO:     172.23.0.3:46862 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:36.780Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Error in _create_connection().
+knowledge-1   | Traceback (most recent call last):
+knowledge-1   |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+knowledge-1   |     raise self._reap_last_connection_workflow_error(error)
+knowledge-1   |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/utils/selector_ioloop_adapter.py", line 565, in _resolve
+knowledge-1   |     result = socket.getaddrinfo(self._host, self._port, self._family,
+knowledge-1   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+knowledge-1   |   File "/usr/local/lib/python3.12/socket.py", line 978, in getaddrinfo
+knowledge-1   |     for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+knowledge-1   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+knowledge-1   | socket.gaierror: [Errno -2] Name or service not known
+knowledge-1   | 2026-11-20T23:34:36.807Z WARNING service=knowledge corr=- helix.rabbit | [rabbit] knowledge.incident-lifecycle disconnected: [Errno -2] Name or service not known; reconnect attempt 2 in 1.3s
+knowledge-1   | 2026-11-20T23:34:38.130Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 42942)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:38.130Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:38.130Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:40.135Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 42946)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:40.135Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:40.135Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:42.139Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 42962)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:42.139Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:42.139Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:42.140Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+knowledge-1   | 2026-11-20T23:34:42.140Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:42.140Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:42.140Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Error in _create_connection().
+knowledge-1   | Traceback (most recent call last):
+knowledge-1   |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+knowledge-1   |     raise self._reap_last_connection_workflow_error(error)
+knowledge-1   | pika.exceptions.AMQPConnectionError
+knowledge-1   | 2026-11-20T23:34:42.141Z WARNING service=knowledge corr=- helix.rabbit | [rabbit] knowledge.incident-lifecycle disconnected: ; reconnect attempt 3 in 3.5s
+knowledge-1   | INFO:     127.0.0.1:44640 - "GET /health HTTP/1.1" 503 Service Unavailable
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:45.612Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 47636)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:45.613Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:45.613Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:47.618Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 47640)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:47.619Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:47.619Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:49.626Z ERROR service=knowledge corr=- pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=15, family=2, type=1, proto=6, laddr=('172.23.0.9', 47652)>; error=111 (Connection refused)
+knowledge-1   | 2026-11-20T23:34:49.627Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+knowledge-1   | 2026-11-20T23:34:49.627Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:49.627Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+knowledge-1   | 2026-11-20T23:34:49.627Z ERROR service=knowledge corr=- pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:49.628Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+knowledge-1   | 2026-11-20T23:34:49.628Z ERROR service=knowledge corr=- pika.adapters.blocking_connection | Error in _create_connection().
+knowledge-1   | Traceback (most recent call last):
+knowledge-1   |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+knowledge-1   |     raise self._reap_last_connection_workflow_error(error)
+knowledge-1   | pika.exceptions.AMQPConnectionError
+knowledge-1   | 2026-11-20T23:34:49.629Z WARNING service=knowledge corr=- helix.rabbit | [rabbit] knowledge.incident-lifecycle disconnected: ; reconnect attempt 4 in 7.0s
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:41550 - "GET /health HTTP/1.1" 503 Service Unavailable
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:34:56.793Z INFO  service=knowledge corr=- helix.rabbit | [rabbit] consuming knowledge.incident-lifecycle <- ['incident.resolved', 'incident.reopened']
+knowledge-1   | INFO:     172.23.0.7:41912 - "POST /search HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:56808 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:50702 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:44594 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:43064 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:42544 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:35:49.150Z INFO  service=knowledge corr=T-000032 knowledge | [ingest] T-000032 resolved (rev 1): duplicate
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:56708 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:36:02.146Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 1/5): ValueError: incident.resolved needs summary and resolution; retrying later
+knowledge-1   | 2026-11-20T23:36:02.212Z INFO  service=knowledge corr=T-DLQOK-17761 knowledge | [ingest] T-DLQOK-17761 reopened (rev 1): withdrawn
+knowledge-1   | 2026-11-20T23:36:02.926Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 2/5): ValueError: incident.resolved needs summary and resolution; retrying later
+knowledge-1   | 2026-11-20T23:36:04.496Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 3/5): ValueError: incident.resolved needs summary and resolution; retrying later
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:58950 - "GET /health HTTP/1.1" 200 OK
+knowledge-1   | 2026-11-20T23:36:07.406Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 4/5): ValueError: incident.resolved needs summary and resolution; retrying later
+knowledge-1   | 2026-11-20T23:36:07.413Z ERROR service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] DEAD-LETTERED message 0d043ce8-779f-4bed-9b80-e92d51f4816e after 5 attempts: ValueError: incident.resolved needs summary and resolution
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.1:34280 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     172.23.0.3:50750 - "GET /metrics/ HTTP/1.1" 200 OK
+knowledge-1   | INFO:     127.0.0.1:42242 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:60688 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:41926 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:44620 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:33:17.260Z INFO  service=tickets corr=req-9bd29b46c5a8 tickets | [tickets] T-000070 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:36144 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | INFO:     127.0.0.1:34694 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:33:20.319Z INFO  service=tickets corr=req-c2a027f6a544 tickets | [tickets] T-000071 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:36152 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:33:22.854Z INFO  service=tickets corr=req-71b7f296d896 tickets | [tickets] T-000072 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:51414 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | 2026-11-20T23:33:23.321Z INFO  service=tickets corr=req-a8b6173836c4 tickets | [tickets] T-000073 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:51416 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | 2026-11-20T23:33:23.732Z INFO  service=tickets corr=req-bf3d92bf1b38 tickets | [tickets] T-000074 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:51426 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:58170 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:46940 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:44258 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48254 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     Shutting down
+tickets-1     | INFO:     Waiting for application shutdown.
+tickets-1     | INFO:     Application shutdown complete.
+tickets-1     | INFO:     Finished server process [1]
+tickets-1     | INFO:     Started server process [1]
+tickets-1     | INFO:     Waiting for application startup.
+tickets-1     | INFO:     Application startup complete.
+tickets-1     | INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+tickets-1     | INFO:     172.23.0.1:39326 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:20.634Z INFO  service=tickets corr=req-e7bd927aa21f tickets | [tickets] T-000075 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:53132 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:37864 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:33.375Z INFO  service=tickets corr=req-bd860b999538 tickets | [tickets] T-000076 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.1:45570 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | 2026-11-20T23:34:33.560Z INFO  service=tickets corr=req-cb594eaea235 tickets | [tickets] T-000077 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.1:45580 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | 2026-11-20T23:34:33.738Z INFO  service=tickets corr=req-0d3e6f6e038e tickets | [tickets] T-000078 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.1:45582 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | INFO:     127.0.0.1:38604 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:45598 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:36.853Z ERROR service=tickets corr=- pika.adapters.utils.selector_ioloop_adapter | Address resolution failed: gaierror(-2, 'Name or service not known')
+tickets-1     | 2026-11-20T23:34:36.857Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | getaddrinfo failed: gaierror(-2, 'Name or service not known').
+tickets-1     | INFO:     172.23.0.1:45612 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:38.862Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=12, family=2, type=1, proto=6, laddr=('172.23.0.5', 36826)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:38.863Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:38.863Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | INFO:     172.23.0.1:45618 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:40.865Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=12, family=2, type=1, proto=6, laddr=('172.23.0.5', 36828)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:40.866Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:40.866Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:40.866Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - gaierror(-2, 'Name or service not known').
+tickets-1     | 2026-11-20T23:34:40.867Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - gaierror(-2, 'Name or service not known')
+tickets-1     | 2026-11-20T23:34:40.867Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - gaierror(-2, 'Name or service not known')
+tickets-1     | 2026-11-20T23:34:40.868Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.blocking_connection | Error in _create_connection().
+tickets-1     | Traceback (most recent call last):
+tickets-1     |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+tickets-1     |     raise self._reap_last_connection_workflow_error(error)
+tickets-1     | pika.exceptions.AMQPConnectionError
+tickets-1     | 2026-11-20T23:34:40.880Z WARNING service=tickets corr=req-bd860b999538 helix.outbox | [outbox] relay error (1 in a row): ; next pass in 0.4s
+tickets-1     | 2026-11-20T23:34:41.370Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=20, family=2, type=1, proto=6, laddr=('172.23.0.5', 36842)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:41.370Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:41.370Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:45622 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:43.374Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=20, family=2, type=1, proto=6, laddr=('172.23.0.5', 36078)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:43.374Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:43.375Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | INFO:     172.23.0.1:45694 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:45.419Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=20, family=2, type=1, proto=6, laddr=('172.23.0.5', 36084)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:45.419Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:45.419Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:45.419Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+tickets-1     | 2026-11-20T23:34:45.419Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:45.419Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:45.420Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.blocking_connection | Error in _create_connection().
+tickets-1     | Traceback (most recent call last):
+tickets-1     |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+tickets-1     |     raise self._reap_last_connection_workflow_error(error)
+tickets-1     | pika.exceptions.AMQPConnectionError
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:45.420Z WARNING service=tickets corr=req-bd860b999538 helix.outbox | [outbox] relay error (2 in a row): ; next pass in 0.6s
+tickets-1     | INFO:     127.0.0.1:56104 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:45700 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:46.041Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=20, family=2, type=1, proto=6, laddr=('172.23.0.5', 36100)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:46.042Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:46.042Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:45710 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:48.045Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=21, family=2, type=1, proto=6, laddr=('172.23.0.5', 36106)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:48.046Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+chat-1        | INFO:     127.0.0.1:59570 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:50.167Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000069 in time -> next level
+oncall-1      | 2026-11-20T23:35:50.167Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000069 (level 2, ack within 30s) P-18022
+oncall-1      | 2026-11-20T23:35:50.167Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000065 in time -> next level
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:33776 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:48.046Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | INFO:     172.23.0.1:45716 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:50.049Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.io_services_utils | Socket failed to connect: <socket.socket fd=21, family=2, type=1, proto=6, laddr=('172.23.0.5', 36108)>; error=111 (Connection refused)
+tickets-1     | 2026-11-20T23:34:50.050Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | TCP Connection attempt failed: ConnectionRefusedError(111, 'Connection refused'); dest=(<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6, '', ('172.23.0.2', 5672))
+tickets-1     | 2026-11-20T23:34:50.050Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnector - reporting failure: AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:50.050Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQP connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused').
+tickets-1     | 2026-11-20T23:34:50.050Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.utils.connection_workflow | AMQPConnectionWorkflow - reporting failure: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:50.050Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.blocking_connection | Connection workflow failed: AMQPConnectionWorkflowFailed: 3 exceptions in all; last exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused'); first exception - AMQPConnectorSocketConnectError: ConnectionRefusedError(111, 'Connection refused')
+tickets-1     | 2026-11-20T23:34:50.050Z ERROR service=tickets corr=req-bd860b999538 pika.adapters.blocking_connection | Error in _create_connection().
+tickets-1     | Traceback (most recent call last):
+tickets-1     |   File "/usr/local/lib/python3.12/site-packages/pika/adapters/blocking_connection.py", line 451, in _create_connection
+tickets-1     |     raise self._reap_last_connection_workflow_error(error)
+tickets-1     | pika.exceptions.AMQPConnectionError
+tickets-1     | 2026-11-20T23:34:50.051Z WARNING service=tickets corr=req-bd860b999538 helix.outbox | [outbox] relay error (3 in a row): ; next pass in 2.0s
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:39122 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:54094 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:44574 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:41252 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:45718 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.1:49516 - "GET /outbox HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:37070 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | 2026-11-20T23:34:58.223Z INFO  service=tickets corr=req-189f55b511a0 tickets | [tickets] T-000079 OPEN (incident.opened queued in outbox)
+tickets-1     | INFO:     172.23.0.7:43834 - "POST /tickets HTTP/1.1" 201 Created
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:49574 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.8:58462 - "GET /tickets?limit=30 HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:50.167Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000065 (level 2, ack within 30s) P-18023
+oncall-1      | 2026-11-20T23:35:50.168Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000070 in time -> next level
+oncall-1      | 2026-11-20T23:35:50.168Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000070 (level 2, ack within 30s) P-18024
+oncall-1      | 2026-11-20T23:35:50.236Z WARNING service=oncall corr=req-189f55b511a0 oncall | [oncall] duplicate incident.opened for T-000079 ignored
+oncall-1      | INFO:     172.23.0.3:45408 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:53.201Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000071 in time -> next level
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:51708 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:58754 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:53.201Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000071 (level 2, ack within 30s) P-18025
+oncall-1      | 2026-11-20T23:35:53.201Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000075 in time -> next level
+oncall-1      | 2026-11-20T23:35:53.201Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000075 (level 2, ack within 30s) P-18026
+oncall-1      | 2026-11-20T23:35:56.227Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000051 in time -> next level
+oncall-1      | 2026-11-20T23:35:56.227Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000051 (level 2, ack within 30s) P-18027
+tickets-1     | INFO:     127.0.0.1:43356 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:56.227Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000052 in time -> next level
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000052 (level 2, ack within 30s) P-18028
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000059 in time -> next level
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000059 (level 2, ack within 30s) P-18029
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000072 in time -> next level
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000072 (level 2, ack within 30s) P-18030
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [escalate] bob did not ack T-000076 in time -> next level
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000076 (level 2, ack within 30s) P-18031
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [escalate] bob did not ack T-000077 in time -> next level
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:56.228Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000077 (level 2, ack within 30s) P-18032
+oncall-1      | 2026-11-20T23:35:57.250Z INFO  service=oncall corr=- oncall | [escalate] bob did not ack T-000078 in time -> next level
+oncall-1      | 2026-11-20T23:35:57.250Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000078 (level 2, ack within 30s) P-18033
+oncall-1      | 2026-11-20T23:35:57.250Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000073 in time -> next level
+oncall-1      | 2026-11-20T23:35:57.250Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000073 (level 2, ack within 30s) P-18034
+oncall-1      | 2026-11-20T23:35:57.251Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000074 in time -> next level
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:34524 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:34222 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     127.0.0.1:52542 - "GET /health HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+tickets-1     | INFO:     172.23.0.3:48284 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:57.251Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000074 (level 2, ack within 30s) P-18035
+oncall-1      | INFO:     172.23.0.3:45408 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | INFO:     127.0.0.1:33566 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:34842 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:58.274Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000055 in time -> next level
+oncall-1      | 2026-11-20T23:35:58.275Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000055 (level 2, ack within 30s) P-18036
+chat-1        | INFO:     127.0.0.1:39476 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:58.275Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000034 in time -> next level
+oncall-1      | 2026-11-20T23:35:58.275Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000034 (level 2, ack within 30s) P-18037
+oncall-1      | 2026-11-20T23:35:58.276Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000035 in time -> next level
+chat-1        | INFO:     127.0.0.1:53810 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:58.276Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000035 (level 2, ack within 30s) P-18038
+oncall-1      | 2026-11-20T23:35:58.276Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-DLQOK-99479 in time -> next level
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:56862 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:58.276Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-DLQOK-99479 (level 2, ack within 30s) P-18039
+oncall-1      | 2026-11-20T23:35:58.276Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-DLQOK-99668 in time -> next level
+oncall-1      | 2026-11-20T23:35:58.276Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-DLQOK-99668 (level 2, ack within 30s) P-18040
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:43108 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:58.277Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000036 in time -> next level
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:59054 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:40318 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:54734 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:59390 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:35:58.277Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000036 (level 2, ack within 30s) P-18041
+oncall-1      | 2026-11-20T23:35:58.277Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000037 in time -> next level
+oncall-1      | 2026-11-20T23:35:58.277Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000037 (level 2, ack within 30s) P-18042
+oncall-1      | 2026-11-20T23:35:59.301Z INFO  service=oncall corr=- oncall | [escalate] bob did not ack T-000079 in time -> next level
+oncall-1      | 2026-11-20T23:35:59.302Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000079 (level 2, ack within 30s) P-18043
+oncall-1      | 2026-11-20T23:36:01.338Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000038 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.338Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000038 (level 2, ack within 30s) P-18044
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:54068 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:52160 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:39712 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:01.338Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000028 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.339Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000028 (level 2, ack within 30s) P-18045
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:43710 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:54196 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:09.516Z INFO  service=chat corr=req-e1749f55b181 chat | [decision] d-329e8bba9297 answer/grounded conf=0.726 thr=0.4 (model:hash-v1) emb=hash-v1 ticket=None
+chat-1        | INFO:     172.23.0.1:54198 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:16.673Z WARNING service=chat corr=req-9bd29b46c5a8 chat | [chat] knowledge search failed: AttemptTimeout('no response within 2.0s')
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:01.339Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000021 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.339Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000021 (level 2, ack within 30s) P-18046
+oncall-1      | 2026-11-20T23:36:01.339Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000022 in time -> next level
+chat-1        | 2026-11-20T23:33:17.691Z INFO  service=chat corr=req-9bd29b46c5a8 chat | [decision] d-caa93fc07e29 escalate/kb_unavailable conf=None thr=None (None) emb=None ticket=T-000070
+chat-1        | INFO:     172.23.0.1:45538 - "POST /chat HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000022 (level 2, ack within 30s) P-18047
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000023 in time -> next level
+chat-1        | INFO:     127.0.0.1:54580 - "GET /health HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:19.996Z WARNING service=chat corr=req-c2a027f6a544 chat | [chat] knowledge search failed: AttemptTimeout('no response within 2.0s')
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000023 (level 2, ack within 30s) P-18048
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000001 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000001 (level 2, ack within 30s) P-18049
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000002 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.340Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000002 (level 2, ack within 30s) P-18050
+oncall-1      | 2026-11-20T23:36:01.341Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000005 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.341Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000005 (level 2, ack within 30s) P-18051
+oncall-1      | 2026-11-20T23:36:01.341Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000016 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.341Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000016 (level 2, ack within 30s) P-18052
+oncall-1      | 2026-11-20T23:36:01.341Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000024 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.341Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000024 (level 2, ack within 30s) P-18053
+chat-1        | 2026-11-20T23:33:20.627Z INFO  service=chat corr=req-c2a027f6a544 chat | [decision] d-723908536cc2 escalate/kb_unavailable conf=None thr=None (None) emb=None ticket=T-000071
+chat-1        | INFO:     172.23.0.1:45554 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:22.745Z INFO  service=chat corr=req-71b7f296d896 helix.breaker | [breaker:chat->knowledge] CLOSED -> OPEN
+chat-1        | 2026-11-20T23:33:22.746Z WARNING service=chat corr=req-71b7f296d896 chat | [chat] knowledge search failed: AttemptTimeout('no response within 2.0s')
+chat-1        | 2026-11-20T23:33:23.037Z INFO  service=chat corr=req-71b7f296d896 chat | [decision] d-f85173892b53 escalate/kb_unavailable conf=None thr=None (None) emb=None ticket=T-000072
+chat-1        | INFO:     172.23.0.1:45560 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:23.511Z INFO  service=chat corr=req-a8b6173836c4 chat | [decision] d-e0047f864d2d escalate/kb_unavailable conf=None thr=None (None) emb=None ticket=T-000073
+oncall-1      | 2026-11-20T23:36:01.342Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000045 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.342Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000045 (level 2, ack within 30s) P-18054
+oncall-1      | 2026-11-20T23:36:01.342Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000046 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.342Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000046 (level 2, ack within 30s) P-18055
+oncall-1      | 2026-11-20T23:36:01.342Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000047 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.343Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000047 (level 2, ack within 30s) P-18056
+oncall-1      | 2026-11-20T23:36:01.343Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000025 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.343Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000025 (level 2, ack within 30s) P-18057
+oncall-1      | 2026-11-20T23:36:01.343Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000044 in time -> next level
+chat-1        | INFO:     172.23.0.1:40204 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:24.020Z INFO  service=chat corr=req-bf3d92bf1b38 chat | [decision] d-3d9ed90b09a8 escalate/kb_unavailable conf=None thr=None (None) emb=None ticket=T-000074
+chat-1        | INFO:     172.23.0.1:40212 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:40228 - "GET /config HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:01.344Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000044 (level 2, ack within 30s) P-18058
+oncall-1      | 2026-11-20T23:36:01.344Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000032 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.345Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000032 (level 2, ack within 30s) P-18059
+oncall-1      | 2026-11-20T23:36:01.345Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000026 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.345Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000026 (level 2, ack within 30s) P-18060
+oncall-1      | 2026-11-20T23:36:01.346Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000019 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.346Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000019 (level 2, ack within 30s) P-18061
+oncall-1      | 2026-11-20T23:36:01.346Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000027 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.346Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000027 (level 2, ack within 30s) P-18062
+oncall-1      | 2026-11-20T23:36:01.346Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000041 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.346Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000041 (level 2, ack within 30s) P-18063
+oncall-1      | 2026-11-20T23:36:01.347Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-HOL-99920 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.347Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-HOL-99920 (level 2, ack within 30s) P-18064
+oncall-1      | 2026-11-20T23:36:01.347Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000020 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.348Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000020 (level 2, ack within 30s) P-18065
+oncall-1      | 2026-11-20T23:36:01.348Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000042 in time -> next level
+chat-1        | INFO:     127.0.0.1:39136 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:01.349Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000042 (level 2, ack within 30s) P-18066
+oncall-1      | 2026-11-20T23:36:01.349Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000043 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.349Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000043 (level 2, ack within 30s) P-18067
+oncall-1      | 2026-11-20T23:36:01.350Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000033 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.350Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000033 (level 2, ack within 30s) P-18068
+oncall-1      | 2026-11-20T23:36:01.350Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000048 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.350Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000048 (level 2, ack within 30s) P-18069
+oncall-1      | 2026-11-20T23:36:01.351Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000049 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.352Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000049 (level 2, ack within 30s) P-18070
+oncall-1      | 2026-11-20T23:36:01.352Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000057 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.352Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000057 (level 2, ack within 30s) P-18071
+oncall-1      | 2026-11-20T23:36:01.353Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000056 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.353Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000056 (level 2, ack within 30s) P-18072
+oncall-1      | 2026-11-20T23:36:01.353Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000053 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.353Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000053 (level 2, ack within 30s) P-18073
+oncall-1      | 2026-11-20T23:36:01.354Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000054 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.354Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000054 (level 2, ack within 30s) P-18074
+oncall-1      | 2026-11-20T23:36:01.354Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000050 in time -> next level
+oncall-1      | 2026-11-20T23:36:01.355Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000050 (level 2, ack within 30s) P-18075
+oncall-1      | 2026-11-20T23:36:01.851Z INFO  service=oncall corr=T-DLQOK-17761 oncall | [page] PAGING alice for T-DLQOK-17761 (level 0, ack within 30s) P-18076
+oncall-1      | 2026-11-20T23:36:02.389Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000029 in time -> next level
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:56850 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:02.390Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000029 (level 2, ack within 30s) P-18077
+oncall-1      | 2026-11-20T23:36:02.390Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000030 in time -> next level
+oncall-1      | 2026-11-20T23:36:02.390Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000030 (level 2, ack within 30s) P-18078
+oncall-1      | 2026-11-20T23:36:02.391Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000031 in time -> next level
+oncall-1      | 2026-11-20T23:36:02.391Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000031 (level 2, ack within 30s) P-18079
+oncall-1      | 2026-11-20T23:36:02.391Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000039 in time -> next level
+oncall-1      | 2026-11-20T23:36:02.392Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000039 (level 2, ack within 30s) P-18080
+oncall-1      | 2026-11-20T23:36:02.392Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000040 in time -> next level
+oncall-1      | 2026-11-20T23:36:02.392Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000040 (level 2, ack within 30s) P-18081
+oncall-1      | INFO:     172.23.0.3:45408 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | INFO:     172.23.0.3:45408 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | INFO:     127.0.0.1:60014 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:09.437Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000060 in time -> next level
+oncall-1      | 2026-11-20T23:36:09.438Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000060 (level 2, ack within 30s) P-18082
+oncall-1      | 2026-11-20T23:36:10.472Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-DLQOK-17343 in time -> next level
+oncall-1      | 2026-11-20T23:36:10.481Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-DLQOK-17343 (level 2, ack within 30s) P-18083
+oncall-1      | 2026-11-20T23:36:11.534Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000061 in time -> next level
+oncall-1      | 2026-11-20T23:36:11.535Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000061 (level 2, ack within 30s) P-18084
+oncall-1      | 2026-11-20T23:36:11.535Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000062 in time -> next level
+oncall-1      | 2026-11-20T23:36:11.536Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000062 (level 2, ack within 30s) P-18085
+oncall-1      | INFO:     172.23.0.3:45408 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:13.572Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000063 in time -> next level
+oncall-1      | 2026-11-20T23:36:13.573Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000063 (level 2, ack within 30s) P-18086
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:34180 - "GET /health HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:33:51.914Z INFO  service=chat corr=req-bc8dc07e2fdf helix.breaker | [breaker:chat->knowledge] OPEN -> HALF_OPEN
+chat-1        | 2026-11-20T23:33:52.184Z INFO  service=chat corr=req-bc8dc07e2fdf helix.breaker | [breaker:chat->knowledge] HALF_OPEN -> CLOSED
+chat-1        | 2026-11-20T23:33:52.279Z INFO  service=chat corr=req-bc8dc07e2fdf chat | [decision] d-cce1cb60ebff answer/grounded conf=0.726 thr=0.4 (model:hash-v1) emb=hash-v1 ticket=None
+chat-1        | INFO:     172.23.0.1:46654 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:46660 - "GET /config HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:15.603Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000064 in time -> next level
+oncall-1      | 2026-11-20T23:36:15.603Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000064 (level 2, ack within 30s) P-18087
+chat-1        | INFO:     127.0.0.1:43968 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:16.625Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000066 in time -> next level
+oncall-1      | 2026-11-20T23:36:16.626Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000066 (level 2, ack within 30s) P-18088
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:34:08.202Z INFO  service=chat corr=req-e7bd927aa21f chat | [decision] d-954249ef0bc0 escalate/low_confidence conf=0.079 thr=0.4 (model:hash-v1) emb=hash-v1 ticket=None
+chat-1        | INFO:     172.23.0.1:47150 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:43170 - "GET /config HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:34592 - "GET /health HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:34:13.898Z WARNING service=chat corr=req-e7bd927aa21f chat.clients | [tickets] attempt 1/3 failed (ConnectError); retry in 0.15s
+chat-1        | 2026-11-20T23:34:14.076Z WARNING service=chat corr=req-e7bd927aa21f chat.clients | [tickets] attempt 2/3 failed (ConnectError); retry in 0.38s
+chat-1        | INFO:     172.23.0.1:33620 - "GET /decisions/d-954249ef0bc0 HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:33632 - "GET /decisions/d-954249ef0bc0 HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:33638 - "GET /decisions/d-954249ef0bc0 HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:34:20.757Z INFO  service=chat corr=req-e7bd927aa21f chat | [escalation] d-954249ef0bc0 delivered late as T-000075
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.1:34104 - "GET /decisions/d-954249ef0bc0 HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:41060 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:16.626Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000067 in time -> next level
+oncall-1      | 2026-11-20T23:36:16.626Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000067 (level 2, ack within 30s) P-18089
+oncall-1      | 2026-11-20T23:36:16.626Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000068 in time -> next level
+oncall-1      | 2026-11-20T23:36:16.626Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000068 (level 2, ack within 30s) P-18090
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | INFO:     172.23.0.3:45408 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:17.652Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-000058 in time -> next level
+chat-1        | INFO:     127.0.0.1:53090 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:40418 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:17.653Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-000058 (level 2, ack within 30s) P-18091
+chat-1        | INFO:     127.0.0.1:40414 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | 2026-11-20T23:34:58.358Z INFO  service=chat corr=req-189f55b511a0 chat | [decision] d-1e5a2456eeb7 escalate/low_confidence conf=0.079 thr=0.4 (model:hash-v1) emb=hash-v1 ticket=T-000079
+chat-1        | INFO:     172.23.0.1:52238 - "POST /chat HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:54304 - "GET /health HTTP/1.1" 200 OK
+oncall-1      | 2026-11-20T23:36:17.653Z INFO  service=oncall corr=- oncall | [escalate] carol did not ack T-DLQOK-17045 in time -> next level
+oncall-1      | 2026-11-20T23:36:17.653Z INFO  service=oncall corr=- oncall | [page] PAGING carol for T-DLQOK-17045 (level 2, ack within 30s) P-18092
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.8:43284 - "GET /conversations?status=WAITING_AGENT,LIVE HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:60358 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:56330 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:37706 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:49756 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:51366 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     127.0.0.1:50650 - "GET /health HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:60266 - "GET /metrics/ HTTP/1.1" 200 OK
+chat-1        | INFO:     172.23.0.3:43104 - "GET /metrics/ HTTP/1.1" 200 OK

@@ -1,0 +1,14 @@
+
+>>> Publish a malformed incident.resolved, then a valid event behind it (DLQ depth now 4)
+    poison=T-POISON-17761 event_id=0d043ce8-779f-4bed-9b80-e92d51f4816e
+    valid=T-DLQOK-17761 event_id=9c908b73-4c01-47de-8125-015b13c10489
+
+>>> Wait for the valid event, then for the poison message to use up its attempts
+    knowledge-1  | 2026-11-20T23:24:10.911Z ERROR service=knowledge corr=T-POISON-17045 helix.rabbit | [knowledge.incident-lifecycle] DEAD-LETTERED message 869def2a-0b1e-4168-b932-05d833e660e1 after 5 attempts: ValueError: i
+    knowledge-1  | 2026-11-20T23:29:08.159Z ERROR service=knowledge corr=T-POISON-17343 helix.rabbit | [knowledge.incident-lifecycle] DEAD-LETTERED message 3124ccab-a12e-43df-9212-b9a68be9da46 after 5 attempts: ValueError: i
+    knowledge-1  | 2026-11-20T23:36:02.146Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 1/5): ValueError: inciden
+    knowledge-1  | 2026-11-20T23:36:02.212Z INFO  service=knowledge corr=T-DLQOK-17761 knowledge | [ingest] T-DLQOK-17761 reopened (rev 1): withdrawn
+    knowledge-1  | 2026-11-20T23:36:02.926Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 2/5): ValueError: inciden
+    knowledge-1  | 2026-11-20T23:36:04.496Z WARNING service=knowledge corr=T-POISON-17761 helix.rabbit | [knowledge.incident-lifecycle] handler error on 0d043ce8-779f-4bed-9b80-e92d51f4816e (attempt 3/5): ValueError: inciden
+    valid event processed while the poison message was retried: True
+    DLQ depth: 4 -> 5; knowledge dead_lettered_total = 1.0
