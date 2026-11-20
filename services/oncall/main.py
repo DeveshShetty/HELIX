@@ -15,6 +15,7 @@
 - Console UI at / for responders: ack, resolve (staff-written summary +
   resolution), reopen.
 """
+import logging
 import json
 import os
 import time
@@ -29,6 +30,8 @@ from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, st
 from common.http import request_json
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
+
+logger = logging.getLogger("oncall")
 
 SERVICE = "oncall"
 DB_PATH = os.getenv("DB_PATH", "/data/oncall.db")
@@ -99,8 +102,7 @@ def _page(conn, ticket_id: str, level: int) -> str:
     page_id = f"P-{cur.lastrowid}"
     conn.execute("UPDATE pages SET page_id=? WHERE seq=?", (page_id, cur.lastrowid))
     PAGES_SENT.labels(str(level)).inc()
-    print(f"[page] PAGING {chain[level]} for {ticket_id} (level {level}, ack within {ACK_TIMEOUT_SECONDS:.0f}s) {page_id}",
-          flush=True)
+    logger.info(f"[page] PAGING {chain[level]} for {ticket_id} (level {level}, ack within {ACK_TIMEOUT_SECONDS:.0f}s) {page_id}")
     return page_id
 
 
@@ -122,7 +124,7 @@ def handle_incident_event(event: dict) -> None:
         if already_processed(conn, event["event_id"]):
             conn.execute("ROLLBACK")
             EVENTS_CONSUMED.labels(SERVICE, etype, "duplicate").inc()
-            print(f"[oncall] duplicate {etype} for {ticket_id} ignored", flush=True)
+            logger.warning(f"[oncall] duplicate {etype} for {ticket_id} ignored")
             return
         status = {"incident.opened": "OPEN", "incident.reopened": "OPEN",
                   "incident.acked": "ACKED", "incident.resolved": "RESOLVED"}[etype]
@@ -141,7 +143,7 @@ def handle_incident_event(event: dict) -> None:
         else:
             n = _cancel_pending(conn, ticket_id)
             if n:
-                print(f"[oncall] {ticket_id} {status}: cancelled {n} pending page(s)", flush=True)
+                logger.info(f"[oncall] {ticket_id} {status}: cancelled {n} pending page(s)")
         mark_processed(conn, event["event_id"])
         conn.execute("COMMIT")
         EVENTS_CONSUMED.labels(SERVICE, etype, "processed").inc()
@@ -166,13 +168,13 @@ def escalation_loop() -> None:
             for p in overdue:
                 conn.execute("UPDATE pages SET status='TIMED_OUT' WHERE page_id=?", (p["page_id"],))
                 ESCALATIONS.labels(str(p["level"])).inc()
-                print(f"[escalate] {p['responder_id']} did not ack {p['ticket_id']} in time -> next level", flush=True)
+                logger.info(f"[escalate] {p['responder_id']} did not ack {p['ticket_id']} in time -> next level")
                 _page(conn, p["ticket_id"], p["level"] + 1)
             conn.execute("COMMIT")
             PAGES_PENDING.set(conn.execute("SELECT COUNT(*) FROM pages WHERE status='PENDING'").fetchone()[0])
             conn.close()
         except Exception as exc:
-            print(f"[escalate] loop error: {exc!r}", flush=True)
+            logger.error(f"[escalate] loop error: {exc!r}")
         time.sleep(1)
 
 
@@ -292,7 +294,7 @@ def ack_page(page_id: str, body: AckIn):
     finally:
         conn.close()
     ACKS.labels("acked").inc()
-    print(f"[oncall] {body.responder_id} acked {page['ticket_id']} via {page_id}", flush=True)
+    logger.info(f"[oncall] {body.responder_id} acked {page['ticket_id']} via {page_id}")
     return dict(row)
 
 

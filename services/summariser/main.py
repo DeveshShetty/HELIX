@@ -20,6 +20,7 @@ Pipeline (asynchronous, off the chat's request path):
 Nothing reaches the knowledge base without an agent's approval (proposal
 feedback point 5). The consumer is idempotent on event_id.
 """
+import logging
 import json
 import os
 import re
@@ -36,6 +37,8 @@ from common.http import request_json
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
 from common.redact import redact
+
+logger = logging.getLogger("summariser")
 
 SERVICE = "summariser"
 DB_PATH = os.getenv("DB_PATH", "/data/summariser.db")
@@ -362,7 +365,7 @@ def handle_conversation_closed(event: dict) -> None:
     try:
         if already_processed(conn, event["event_id"]):
             EVENTS_CONSUMED.labels(SERVICE, "conversation.closed", "duplicate").inc()
-            print(f"[summariser] duplicate conversation.closed for {cid} ignored", flush=True)
+            logger.warning(f"[summariser] duplicate conversation.closed for {cid} ignored")
             return
     finally:
         conn.close()
@@ -394,8 +397,8 @@ def handle_conversation_closed(event: dict) -> None:
     EVENTS_CONSUMED.labels(SERVICE, "conversation.closed", "processed").inc()
     _refresh_pending()
     failed = [c["check"] for c in checks if not c["ok"]]
-    print(f"[summariser] {draft_id} for {data.get('ticket_id')} drafted ({method}); "
-          f"checks failed: {failed or 'none'}", flush=True)
+    logger.info(f"[summariser] {draft_id} for {data.get('ticket_id')} drafted ({method}); "
+          f"checks failed: {failed or 'none'}")
 
 
 def _refresh_pending() -> None:
@@ -513,8 +516,8 @@ def approve(draft_id: str, body: ApproveIn):
     _decide(draft_id, "APPROVED", body.responder_id,
             "added to knowledge base" if body.add_to_knowledge_base else "resolved, not added to knowledge base")
     DECIDED.labels("approved", str(body.add_to_knowledge_base).lower()).inc()
-    print(f"[summariser] {draft_id} approved by {body.responder_id}; {d['ticket_id']} resolved "
-          f"(knowledge base: {body.add_to_knowledge_base})", flush=True)
+    logger.info(f"[summariser] {draft_id} approved by {body.responder_id}; {d['ticket_id']} resolved "
+          f"(knowledge base: {body.add_to_knowledge_base})")
     return _get(draft_id)
 
 

@@ -17,6 +17,7 @@ The answer-vs-escalate decision is taken in step 7 from retrieval scores,
 BEFORE any text is generated, so it does not flip between runs.
 Every escalation goes through an outbox (store.py) so it is never lost.
 """
+import logging
 import json
 import os
 import re
@@ -32,10 +33,12 @@ from pydantic import BaseModel, Field
 from common.circuit_breaker import CircuitOpenError
 from common.db import relay_forever, start_daemon
 from common.observability import instrument
-from common import budget, guard
+from common import budget, guard, log
 from services.chat import clients, llm
 from services.chat.conversations import ConversationStore
 from services.chat.store import DecisionStore
+
+logger = logging.getLogger("chat")
 
 SERVICE = "chat"
 DB_PATH = os.getenv("DB_PATH", "/data/chat.db")
@@ -167,8 +170,8 @@ def try_open_ticket(decision_id: str, payload: dict) -> str | None:
     except Exception as exc:
         if store.escalation_failed(decision_id, repr(exc), max_attempts=ESCALATION_MAX_ATTEMPTS) == "gave_up":
             ESCALATIONS_FAILED.inc()
-            print(f"[escalation] ERROR gave up on {decision_id} after {ESCALATION_MAX_ATTEMPTS} attempts: "
-                  f"{exc!r}; customer request needs manual follow-up", flush=True)
+            logger.error(f"[escalation] ERROR gave up on {decision_id} after {ESCALATION_MAX_ATTEMPTS} attempts: "
+                  f"{exc!r}; customer request needs manual follow-up")
         return None
     store.escalation_done(decision_id, t["ticket_id"])
     if payload.get("conversation_id"):
@@ -181,12 +184,14 @@ def escalation_worker() -> None:
     while True:
         try:
             for decision_id, payload in store.due_escalations():
+                log.set_id(payload.get("correlation_id") or decision_id)
                 tid = try_open_ticket(decision_id, payload)
                 if tid:
-                    print(f"[escalation] {decision_id} delivered late as {tid}", flush=True)
+                    logger.info(f"[escalation] {decision_id} delivered late as {tid}")
             ESCALATIONS_PENDING.set(store.pending_count())
         except Exception as exc:
-            print(f"[escalation] worker error: {exc!r}", flush=True)
+            logger.error(f"[escalation] worker error: {exc!r}")
+        log.set_id(None)
         time.sleep(2)
 
 
@@ -201,7 +206,8 @@ def _escalate(d: dict, question: str, retrieved_ids: list[str], why: str) -> dic
         return d
     payload = {"title": question[:120], "question": question, "severity": "medium",
                "conversation_id": d["conversation_id"], "confidence": d["confidence"],
-               "retrieved_doc_ids": retrieved_ids}
+               "retrieved_doc_ids": retrieved_ids,
+               "correlation_id": log.current()}      # the late retry keeps the customer's request id
     # Durable FIRST: if we crash or Tickets is down after this line, the worker delivers it.
     store.add_escalation(d["decision_id"], payload)
     tid = try_open_ticket(d["decision_id"], payload)
@@ -243,7 +249,7 @@ def chat(body: ChatIn):
         "threshold": None, "citations": [], "ticket_id": None, "escalation_pending": False,
         "degraded": False, "reason": "low_confidence", "model": None,
         "prompt_version": llm.PROMPT_VERSION, "index_version": None, "embedding_model": None,
-        "sources": [], "tokens": {"prompt": 0, "completion": 0}, "cost_usd": 0.0,
+        "sources": [], "tokens": {"prompt": 0, "completion": 0}, "cost_usd": 0.0, "request_id": log.current(),
         "dry_run": body.dry_run,
     }
 
@@ -280,7 +286,7 @@ def chat(body: ChatIn):
         d.update(reason="kb_unavailable", degraded=True)
         return _finish(_escalate(d, question, [], "I'm having trouble looking that up right now, and I'd rather not guess."))
     except Exception as exc:
-        print(f"[chat] knowledge search failed: {exc!r}", flush=True)
+        logger.warning(f"[chat] knowledge search failed: {exc!r}")
         d.update(reason="kb_unavailable", degraded=True)
         return _finish(_escalate(d, question, [], "I'm having trouble looking that up right now, and I'd rather not guess."))
 
@@ -300,7 +306,7 @@ def chat(body: ChatIn):
     for r in results:
         clean, removed = guard.sanitize_document(r["text"])
         if removed:
-            print(f"[guard] removed {removed} injected sentence(s) from {r['doc_id']}", flush=True)
+            logger.info(f"[guard] removed {removed} injected sentence(s) from {r['doc_id']}")
         if clean:
             passages.append({**r, "text": clean})
     retrieved_ids = [p["doc_id"] for p in passages]
@@ -361,8 +367,8 @@ def _finish(d: dict) -> dict:
         convs.add(d["conversation_id"], "bot", "helix", d["answer"], d["decision_id"])
         if d["ticket_id"]:
             convs.link_ticket(d["conversation_id"], d["ticket_id"])
-    print(f"[decision] {d['decision_id']} {d['decision']}/{d['reason']} conf={d['confidence']} "
-          f"thr={d['threshold']} emb={d['embedding_model']} ticket={d['ticket_id']}", flush=True)
+    logger.info(f"[decision] {d['decision_id']} {d['decision']}/{d['reason']} conf={d['confidence']} "
+          f"thr={d['threshold']} emb={d['embedding_model']} ticket={d['ticket_id']}")
     return {k: v for k, v in d.items() if k != "message"}
 
 
@@ -438,7 +444,7 @@ def handoff(cid: str, body: HandoffIn | None = None):
                                       "Please keep this window open; they'll join here shortly.")
     HANDOFFS.inc()
     _update_live_gauge()
-    print(f"[handoff] {cid} waiting for an agent ({ticket_id})", flush=True)
+    logger.info(f"[handoff] {cid} waiting for an agent ({ticket_id})")
     return convs.get(cid)
 
 
@@ -464,7 +470,7 @@ def leave_queue(cid: str, body: LeaveIn):
             "engineer will follow up. You can keep asking me questions here.")
     convs.add(cid, "system", "helix", text)
     _update_live_gauge()
-    print(f"[handoff] {cid} left the agent queue ({body.reason})", flush=True)
+    logger.info(f"[handoff] {cid} left the agent queue ({body.reason})")
     return convs.get(cid)
 
 
@@ -511,7 +517,7 @@ def close_conversation(cid: str, body: CloseIn):
                                              "Cloud support! You can keep asking me questions here.")
     _update_live_gauge()
     if closed:
-        print(f"[handoff] {cid} closed by {body.agent_id}; conversation.closed queued for the Summariser", flush=True)
+        logger.info(f"[handoff] {cid} closed by {body.agent_id}; conversation.closed queued for the Summariser")
     return {"conversation_id": cid, "ticket_id": conv["ticket_id"], "status": "CLOSED",
             "note": "A draft summary is being prepared and will appear under 'Summaries to approve'."}
 

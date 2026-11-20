@@ -11,6 +11,7 @@ backoff, and the original is acked. After MAX_DELIVERY_ATTEMPTS it is published
 to the dead-letter queue with the error and its original routing, and counted in
 dead_lettered_total{queue}.
 """
+import logging
 import json
 import os
 import time
@@ -20,7 +21,9 @@ from typing import Callable
 import pika
 from prometheus_client import Counter
 
-from common import retry, topology
+from common import log, retry, topology
+
+logger = logging.getLogger("helix.rabbit")
 
 EXCHANGE = os.getenv("RABBIT_EXCHANGE", "support.events")
 MAX_DELIVERY_ATTEMPTS = int(os.getenv("MAX_DELIVERY_ATTEMPTS", "5"))
@@ -50,12 +53,16 @@ def connection_parameters() -> pika.ConnectionParameters:
 
 def new_event(event_type: str, aggregate_id: str, data: dict | None = None,
               correlation_id: str | None = None) -> dict:
-    """Build an event envelope. event_id is the idempotency key for consumers."""
+    """Build an event envelope. event_id is the idempotency key for consumers.
+
+    correlation_id: explicit, else the id of the request/event being handled now
+    (common/log.py), else the aggregate id.
+    """
     return {
         "event_id": str(uuid.uuid4()),
         "event_type": event_type,          # e.g. "incident.resolved"
         "aggregate_id": aggregate_id,      # e.g. the ticket id
-        "correlation_id": correlation_id or aggregate_id,
+        "correlation_id": correlation_id or log.current() or aggregate_id,
         "occurred_at": time.time(),
         "data": data or {},
     }
@@ -114,8 +121,8 @@ def handle_failure(ch, queue_name: str, method, properties, body: bytes, exc: Ex
                          properties=pika.BasicProperties(headers=headers, **props))
         ch.basic_ack(delivery_tag=method.delivery_tag)
         DEAD_LETTERED.labels(queue_name).inc()
-        print(f"[{queue_name}] DEAD-LETTERED message {properties.message_id} after {attempts} attempts: "
-              f"{headers['x-last-error']}", flush=True)
+        logger.error(f"[{queue_name}] DEAD-LETTERED message {properties.message_id} after {attempts} attempts: "
+              f"{headers['x-last-error']}")
         return "dead-lettered"
 
     sleep(retry.backoff(attempts, CONSUMER_RETRY_BASE, CONSUMER_RETRY_CAP))   # backoff with jitter
@@ -124,8 +131,8 @@ def handle_failure(ch, queue_name: str, method, properties, body: bytes, exc: Ex
                      properties=pika.BasicProperties(headers=headers, **props))
     ch.basic_ack(delivery_tag=method.delivery_tag)
     CONSUMER_RETRIES.labels(queue_name).inc()
-    print(f"[{queue_name}] handler error on {properties.message_id} (attempt {attempts}/{MAX_DELIVERY_ATTEMPTS}): "
-          f"{headers['x-last-error']}; retrying later", flush=True)
+    logger.warning(f"[{queue_name}] handler error on {properties.message_id} (attempt {attempts}/{MAX_DELIVERY_ATTEMPTS}): "
+          f"{headers['x-last-error']}; retrying later")
     return "retried"
 
 
@@ -151,22 +158,29 @@ def consume_forever(queue_name: str, routing_keys: list[str],
             channel.confirm_delivery()          # re-publishes in handle_failure are confirmed
 
             def callback(ch, method, properties, body):
+                # the event's correlation id is on every log line its handler writes,
+                # and on any event the handler publishes (new_event reads it)
+                token = log.set_id(properties.correlation_id or properties.message_id)
                 try:
                     event = json.loads(body.decode("utf-8"))
                     if properties.message_id:
                         event.setdefault("event_id", properties.message_id)
+                    if event.get("correlation_id"):
+                        log.set_id(event["correlation_id"])
                     handler(event)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as exc:
                     handle_failure(ch, queue_name, method, properties, body, exc)
+                finally:
+                    log.CORRELATION_ID.reset(token)
 
             channel.basic_consume(queue=queue_name, on_message_callback=callback)
-            print(f"[rabbit] consuming {queue_name} <- {routing_keys}", flush=True)
+            logger.info(f"[rabbit] consuming {queue_name} <- {routing_keys}")
             channel.start_consuming()
         except Exception as exc:
             failures += 1
             delay = retry.backoff(failures, base=1.0, cap=30.0)
-            print(f"[rabbit] {queue_name} disconnected: {exc}; reconnect attempt {failures} in {delay:.1f}s", flush=True)
+            logger.warning(f"[rabbit] {queue_name} disconnected: {exc}; reconnect attempt {failures} in {delay:.1f}s")
             time.sleep(delay)
         finally:
             try:

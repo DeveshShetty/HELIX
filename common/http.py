@@ -6,10 +6,13 @@ Rules, the same for every caller:
   upstream's detail;
 - when retries run out the caller gets 503 "<name> unavailable".
 """
+import logging
 import httpx
 from fastapi import HTTPException
 
-from common import retry
+from common import log, retry
+
+logger = logging.getLogger("helix.http")
 
 
 class UpstreamError(Exception):
@@ -30,7 +33,7 @@ def _detail(r: httpx.Response) -> str:
 def request_json(method: str, url: str, body: dict | None = None, *, name: str,
                  attempts: int = 3, timeout: float = 3.0, headers: dict | None = None) -> dict:
     def once() -> httpx.Response:
-        r = httpx.request(method, url, json=body, timeout=timeout, headers=headers)
+        r = httpx.request(method, url, json=body, timeout=timeout, headers={**log.headers(), **(headers or {})})
         if r.status_code >= 500:
             raise UpstreamError(r)
         return r
@@ -38,7 +41,7 @@ def request_json(method: str, url: str, body: dict | None = None, *, name: str,
     try:
         r = retry.call(once, attempts=attempts, base=0.3, cap=2.0,
                        retryable=lambda e: isinstance(e, (httpx.TransportError, UpstreamError)),
-                       label=name, log=lambda m: print(m, flush=True))
+                       label=name, log=logger.warning)
     except (httpx.TransportError, UpstreamError) as exc:
         raise HTTPException(503, f"{name} unavailable: {exc!r}") from exc
     if r.status_code >= 400:

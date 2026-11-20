@@ -8,6 +8,8 @@ import time
 from fastapi import FastAPI, Request
 from prometheus_client import Counter, Histogram, make_asgi_app
 
+from common import log
+
 REQUESTS = Counter(
     "http_requests_total", "HTTP requests handled",
     ["service", "method", "route", "status"],
@@ -40,4 +42,5 @@ def instrument(app: FastAPI, service: str) -> None:
             REQUESTS.labels(service, request.method, route, str(status)).inc()
             LATENCY.labels(service, request.method, route).observe(time.perf_counter() - started)
 
+    log.install(app, service)          # X-Request-Id + structured logs (common/log.py)
     app.mount("/metrics", make_asgi_app())

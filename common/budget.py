@@ -18,12 +18,15 @@ On the cap, callers degrade instead of failing:
   knowledge  -> skip the embedding (document stored, indexed later by a rebuild)
 and ai_budget_denied_total{service,purpose} is incremented.
 """
+import logging
 import os
 import sqlite3
 import time
 from datetime import datetime, timezone
 
 from prometheus_client import Counter, Gauge
+
+logger = logging.getLogger("helix.budget")
 
 BUDGET_DB = os.getenv("AI_BUDGET_DB", "/budget/ai_budget.db")
 DAILY_COST_CEILING_USD = float(os.getenv("DAILY_COST_CEILING_USD", "0.50"))
@@ -91,8 +94,8 @@ def allow(service: str, purpose: str) -> bool:
     tokens, cost = today()
     if cost >= DAILY_COST_CEILING_USD or tokens >= DAILY_TOKEN_CEILING:
         DENIED.labels(service, purpose).inc()
-        print(f"[budget] {service}/{purpose} denied: today {tokens} tokens, ${cost:.6f} "
-              f"(ceiling {DAILY_TOKEN_CEILING} tokens / ${DAILY_COST_CEILING_USD})", flush=True)
+        logger.warning(f"[budget] {service}/{purpose} denied: today {tokens} tokens, ${cost:.6f} "
+              f"(ceiling {DAILY_TOKEN_CEILING} tokens / ${DAILY_COST_CEILING_USD})")
         return False
     return True
 
@@ -108,4 +111,4 @@ def record(service: str, purpose: str, model: str, tokens: int, cost_usd: float)
             conn.close()
         today()
     except Exception as exc:                                  # noqa: BLE001
-        print(f"[budget] could not record spend: {exc!r}", flush=True)
+        logger.warning(f"[budget] could not record spend: {exc!r}")

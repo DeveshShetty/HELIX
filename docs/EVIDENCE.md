@@ -292,6 +292,51 @@ Limits, not verified or not handled:
 
 Grafana panel "Shared daily AI budget: tokens used and calls skipped".
 
+## E14. Correlation ids and structured logs (audit fix 4)
+
+`common/log.py` is set up once per service: `instrument()` installs it, so no service needed
+its own setup. All 45 `print()` calls in `common/` and `services/` are now logger calls with
+levels: INFO for normal flow, WARNING for retries, degraded paths and duplicates, ERROR for
+dead-lettered, parked, given up and failed builds. Every line looks like:
+`<UTC time> <LEVEL> service=<svc> corr=<id> <logger> | <message>`.
+
+How the id travels:
+- HTTP: the `X-Request-Id` header is read on the way in (or a new `req-…` id is made). It is
+  returned on the response and sent on outbound calls (`common/http.py`, `chat/clients.py`;
+  the retry pool copies the context into its worker threads).
+- Broker: `new_event()` stamps the current id as `correlation_id`, and `consume_forever()`
+  restores it before the handler runs, so events a handler publishes carry it on.
+- Background work: the outbox relay sets the id of the event it is publishing. A late Chat
+  escalation keeps the customer's request id in its stored payload.
+
+Run on 2026-11-21 (`LLM_MODE=simulated`). One escalated chat, grep for its id across all
+services:
+
+```
+POST /chat -> X-Request-Id: req-08eb81ae8d32 (also body.request_id), escalate/low_confidence, T-000056
+tickets 18:50:27.337Z INFO  service=tickets corr=req-08eb81ae8d32 tickets | [tickets] T-000056 OPEN (incident.opened queued in outbox)
+chat    18:50:27.476Z INFO  service=chat    corr=req-08eb81ae8d32 chat    | [decision] d-4b51ef910f7a escalate/low_confidence conf=0.081 thr=0.4 emb=hash-v1 ticket=T-000056
+oncall  18:50:27.683Z INFO  service=oncall  corr=req-08eb81ae8d32 oncall  | [page] PAGING alice for T-000056 (level 0, ack within 30s) P-9790
+```
+
+The same id survives a delayed escalation (Tickets stopped, then started again):
+
+```
+chat    18:50:47.885Z … corr=req-3fc3ffb202c9 chat    | [decision] d-1cb7b8d3e4c3 escalate/low_confidence … ticket=None
+tickets 18:50:57.070Z … corr=req-3fc3ffb202c9 tickets | [tickets] T-000057 OPEN (incident.opened queued in outbox)
+chat    18:50:57.142Z … corr=req-3fc3ffb202c9 chat    | [escalation] d-1cb7b8d3e4c3 delivered late as T-000057
+oncall  18:50:57.700Z … corr=req-3fc3ffb202c9 oncall  | [page] PAGING alice for T-000057 (level 0, ack within 30s) P-9835
+```
+
+A caller's own id is kept: `GET /health` with `X-Request-Id: demo-trace-42` returns
+`demo-trace-42`.
+
+Limits:
+- Later steps of an incident (ack, resolve, reopen) are new HTTP requests from the console,
+  so they get new ids. The ticket id is the join key across that lifecycle.
+- Uvicorn's own access-log lines keep uvicorn's format, without the corr field.
+- Lines are key=value text, not JSON. There is no log shipping or search: `docker compose logs | grep`.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).

@@ -17,6 +17,7 @@
   Documents that arrive during the build are caught up before the switch.
 - POST /admin/fault: inject latency/errors into /search for resilience demos.
 """
+import logging
 import json
 import os
 import random
@@ -35,6 +36,8 @@ from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
 from common.redact import redact
 from services.knowledge import embedders
+
+logger = logging.getLogger("knowledge")
 
 SERVICE = "knowledge"
 DB_PATH = os.getenv("DB_PATH", "/data/knowledge.db")
@@ -220,7 +223,7 @@ def build_index(model: str) -> str:
     conn.execute("INSERT INTO indexes(version, model, status, started_at) VALUES (?,?,'BUILDING',?)",
                  (version, model, started))
     conn.close()
-    print(f"[index] building {version}", flush=True)
+    logger.info(f"[index] building {version}")
     try:
         conn = connect(DB_PATH)
         docs = [dict(r) for r in conn.execute("SELECT * FROM documents").fetchall()]
@@ -253,8 +256,8 @@ def build_index(model: str) -> str:
         conn.execute("COMMIT")
         conn.close()
         REBUILDS.labels(model, "ok").inc()
-        print(f"[index] {version} ACTIVE ({n} chunks, {len(late_rows)} caught up, "
-              f"{time.time() - started:.1f}s)", flush=True)
+        logger.info(f"[index] {version} ACTIVE ({n} chunks, {len(late_rows)} caught up, "
+              f"{time.time() - started:.1f}s)")
         refresh_cache()
         return version
     except Exception as exc:
@@ -263,7 +266,7 @@ def build_index(model: str) -> str:
         conn.execute("DELETE FROM chunks WHERE version=?", (version,))
         conn.close()
         REBUILDS.labels(model, "failed").inc()
-        print(f"[index] build {version} FAILED: {exc!r}; active index unchanged", flush=True)
+        logger.error(f"[index] build {version} FAILED: {exc!r}; active index unchanged")
         raise
 
 
@@ -373,8 +376,8 @@ def load_seed() -> None:
         for d in changed:
             index_document(d, "seed")
         if changed:
-            print(f"[seed] re-indexed {len(changed)} changed seed document(s)", flush=True)
-    print(f"[seed] {len(seeds)} seed documents; active index {_cache['version']}", flush=True)
+            logger.info(f"[seed] re-indexed {len(changed)} changed seed document(s)")
+    logger.info(f"[seed] {len(seeds)} seed documents; active index {_cache['version']}")
 
 
 def handle_incident_event(event: dict) -> None:
@@ -389,7 +392,7 @@ def handle_incident_event(event: dict) -> None:
     if etype == "incident.reopened":
         outcome = withdraw_incident(ticket_id, revision, event["event_id"])
         EVENTS_CONSUMED.labels(SERVICE, etype, "processed" if outcome == "withdrawn" else outcome).inc()
-        print(f"[ingest] {ticket_id} reopened (rev {revision}): {outcome}", flush=True)
+        logger.info(f"[ingest] {ticket_id} reopened (rev {revision}): {outcome}")
         return
 
     if not data.get("resolution") or not data.get("summary"):
@@ -406,7 +409,7 @@ def handle_incident_event(event: dict) -> None:
         finally:
             conn.close()
         EVENTS_CONSUMED.labels(SERVICE, etype, "skipped").inc()
-        print(f"[ingest] {ticket_id} resolved (rev {revision}): not reusable, not indexed", flush=True)
+        logger.info(f"[ingest] {ticket_id} resolved (rev {revision}): not reusable, not indexed")
         return
 
     # Only staff-written fields are ingested; the user's question is deliberately NOT indexed.
@@ -414,7 +417,7 @@ def handle_incident_event(event: dict) -> None:
     summary, n1 = redact(data["summary"])
     resolution, n2 = redact(data["resolution"])
     if n1 + n2:
-        print(f"[ingest] {ticket_id}: removed {n1 + n2} personal detail(s) before indexing", flush=True)
+        logger.info(f"[ingest] {ticket_id}: removed {n1 + n2} personal detail(s) before indexing")
     # Approved summaries are help-centre articles ("Symptoms / Cause / Steps") with a generic
     # title; older free-text resolutions keep the Problem/Resolution layout.
     article = resolution.lstrip().lower().startswith(("symptoms:", "question:"))
@@ -428,7 +431,7 @@ def handle_incident_event(event: dict) -> None:
     }
     outcome = index_document(doc, "incident", event_id=event["event_id"], ticket_revision=(ticket_id, revision))
     EVENTS_CONSUMED.labels(SERVICE, etype, "processed" if outcome == "indexed" else outcome).inc()
-    print(f"[ingest] {ticket_id} resolved (rev {revision}): {outcome}", flush=True)
+    logger.info(f"[ingest] {ticket_id} resolved (rev {revision}): {outcome}")
 
 
 load_seed()
@@ -562,7 +565,7 @@ def _safe_build(model: str) -> None:
 @app.post("/admin/fault")
 def set_fault(body: FaultIn):
     _fault.update(body.model_dump())
-    print(f"[fault] search fault injection set to {_fault}", flush=True)
+    logger.info(f"[fault] search fault injection set to {_fault}")
     return _fault
 
 

@@ -4,13 +4,16 @@ retry policy (common/retry.py: exponential backoff with jitter, max attempts, bu
 Knowledge Base calls also go through a circuit breaker: when the KB is down we
 stop waiting on it (fail fast) and the caller escalates instead of guessing.
 """
+import logging
 import os
 
 import httpx
 
-from common import retry
+from common import log, retry
 from common.circuit_breaker import CircuitBreaker, CircuitOpenError
 from common.retry import AttemptTimeout
+
+logger = logging.getLogger("chat.clients")
 
 KNOWLEDGE_URL = os.getenv("KNOWLEDGE_URL", "http://localhost:8004")
 TICKETS_URL = os.getenv("TICKETS_URL", "http://localhost:8002")
@@ -36,7 +39,7 @@ def _retryable(exc: Exception) -> bool:
 
 
 def _log(msg: str) -> None:
-    print(msg, flush=True)
+    logger.warning(msg)
 
 
 def search_kb(query: str, top_k: int = 3) -> dict:
@@ -46,7 +49,7 @@ def search_kb(query: str, top_k: int = 3) -> dict:
 
     def once():
         r = httpx.post(f"{KNOWLEDGE_URL}/search", json={"query": query, "top_k": top_k},
-                       timeout=KB_TIMEOUT)
+                       headers=log.headers(), timeout=KB_TIMEOUT)
         r.raise_for_status()
         return r.json()
 
@@ -65,7 +68,7 @@ def open_ticket(idempotency_key: str, payload: dict) -> dict:
     """Idempotent: retries reuse the same Idempotency-Key, so at most one ticket is created."""
     def once():
         r = httpx.post(f"{TICKETS_URL}/tickets", json=payload,
-                       headers={"Idempotency-Key": idempotency_key}, timeout=TICKETS_TIMEOUT)
+                       headers={**log.headers(), "Idempotency-Key": idempotency_key}, timeout=TICKETS_TIMEOUT)
         r.raise_for_status()
         return r.json()
 

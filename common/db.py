@@ -4,6 +4,7 @@ Each service owns its own SQLite file (database-per-service). The outbox
 table lives in the same file as the service's domain tables so that a state
 change and the event announcing it commit in ONE local transaction.
 """
+import logging
 import json
 import os
 import sqlite3
@@ -13,8 +14,10 @@ import time
 import pika
 from prometheus_client import Counter
 
-from common import retry
+from common import log, retry
 from common.messaging import publish_event
+
+logger = logging.getLogger("helix.outbox")
 
 OUTBOX_DDL = """
 CREATE TABLE IF NOT EXISTS outbox (
@@ -97,8 +100,10 @@ def relay_once(conn: sqlite3.Connection, db_name: str, publish=None) -> int:
         "ORDER BY created_at LIMIT 50", (time.time(),)).fetchall()
     sent = 0
     for row in rows:
+        event = json.loads(row["payload"])
+        log.set_id(event.get("correlation_id"))         # relay log lines carry the event's id
         try:
-            publish(json.loads(row["payload"]))
+            publish(event)
         except pika.exceptions.AMQPConnectionError:
             raise                                          # whole broker unavailable: back off
         except Exception as exc:                           # this event's problem (unroutable, nacked…)
@@ -108,15 +113,15 @@ def relay_once(conn: sqlite3.Connection, db_name: str, publish=None) -> int:
                 conn.execute("UPDATE outbox SET published=?, attempts=?, last_error=? WHERE event_id=?",
                              (PARKED, attempts, err, row["event_id"]))
                 OUTBOX_PARKED.labels(db_name).inc()
-                print(f"[outbox] PARKED event {row['event_id']} after {attempts} attempts: {err}", flush=True)
+                logger.error(f"[outbox] PARKED event {row['event_id']} after {attempts} attempts: {err}")
             else:
                 conn.execute("UPDATE outbox SET attempts=?, last_error=?, next_attempt_at=? WHERE event_id=?",
                              (attempts, err, time.time() + retry.backoff(attempts, 1.0, 60.0), row["event_id"]))
-                print(f"[outbox] event {row['event_id']} failed (attempt {attempts}/{OUTBOX_MAX_ATTEMPTS}): {err}",
-                      flush=True)
+                logger.warning(f"[outbox] event {row['event_id']} failed (attempt {attempts}/{OUTBOX_MAX_ATTEMPTS}): {err}")
             continue
         conn.execute("UPDATE outbox SET published=1 WHERE event_id=?", (row["event_id"],))
         sent += 1
+    log.set_id(None)
     return sent
 
 
@@ -141,7 +146,7 @@ def relay_forever(db_path: str, interval: float = 0.5) -> None:
         except Exception as exc:
             failures += 1
             delay = retry.backoff(failures, interval, 30.0)
-            print(f"[outbox] relay error ({failures} in a row): {exc}; next pass in {delay:.1f}s", flush=True)
+            logger.warning(f"[outbox] relay error ({failures} in a row): {exc}; next pass in {delay:.1f}s")
         finally:
             if conn:
                 conn.close()

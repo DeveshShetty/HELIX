@@ -28,6 +28,7 @@ Idempotency:
   - Repeating a transition the ticket is already in returns 200 unchanged
     and emits NO new event.
 """
+import logging
 import json
 import os
 import time
@@ -39,6 +40,8 @@ from pydantic import BaseModel, Field
 from common.db import OUTBOX_DDL, connect, enqueue, outbox_backlog, relay_forever, start_daemon
 from common.messaging import new_event
 from common.observability import instrument
+
+logger = logging.getLogger("tickets")
 
 SERVICE = "tickets"
 DB_PATH = os.getenv("DB_PATH", "/data/tickets.db")
@@ -88,7 +91,7 @@ def backlog_monitor() -> None:
         try:
             OUTBOX_BACKLOG.labels(SERVICE).set(outbox_backlog(DB_PATH))
         except Exception as exc:
-            print(f"[tickets] backlog monitor error: {exc}", flush=True)
+            logger.error(f"[tickets] backlog monitor error: {exc}")
         time.sleep(2)
 
 
@@ -176,7 +179,7 @@ def create_ticket(body: TicketIn, response: Response,
     finally:
         conn.close()
     TICKETS_CREATED.labels(body.severity).inc()
-    print(f"[tickets] {ticket_id} OPEN (incident.opened queued in outbox)", flush=True)
+    logger.info(f"[tickets] {ticket_id} OPEN (incident.opened queued in outbox)")
     return {"ticket_id": ticket_id, "status": "OPEN", "created_at": now}
 
 
@@ -226,7 +229,7 @@ def _transition(ticket_id: str, target: str, updates: dict, event_type: str, eve
                                 {"ticket_id": ticket_id, "revision": revision, **event_data}))
         conn.execute("COMMIT")
         TRANSITIONS_TOTAL.labels(target, "applied").inc()
-        print(f"[tickets] {ticket_id} {t['status']} -> {target} ({event_type} queued)", flush=True)
+        logger.info(f"[tickets] {ticket_id} {t['status']} -> {target} ({event_type} queued)")
         return _load(conn, ticket_id)
     except HTTPException:
         raise

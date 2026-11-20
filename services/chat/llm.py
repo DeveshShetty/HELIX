@@ -9,10 +9,13 @@ ollama:    real local model (llama3.2:1b by default). Non-deterministic.
 Cost is NOTIONAL: local models are free, but we price tokens as if they were a
 small hosted model so the dashboard shows what this would cost in production.
 """
+import logging
 import os
 import re
 
 import httpx
+
+logger = logging.getLogger("chat.llm")
 
 LLM_MODE = os.getenv("LLM_MODE", "simulated")            # simulated | ollama
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://host.docker.internal:11434")
@@ -103,11 +106,11 @@ def generate(question: str, passages: list[dict]) -> dict:
             if g >= GROUNDING_MIN and "<document" not in text:
                 return {"text": text, "model": OLLAMA_MODEL, "prompt_tokens": p_tok,
                         "completion_tokens": c_tok, "fallback": False}
-            print(f"[llm] ungrounded output (grounding={g:.2f} < {GROUNDING_MIN}); using extractive answer", flush=True)
+            logger.warning(f"[llm] ungrounded output (grounding={g:.2f} < {GROUNDING_MIN}); using extractive answer")
             return {"text": _simulated(passages), "model": OLLAMA_MODEL, "prompt_tokens": p_tok,
                     "completion_tokens": c_tok, "fallback": True}
         except Exception as exc:
-            print(f"[llm] ollama failed ({exc!r}); using extractive answer", flush=True)
+            logger.warning(f"[llm] ollama failed ({exc!r}); using extractive answer")
             text = _simulated(passages)
             return {"text": text, "model": "simulated", "prompt_tokens": est_prompt,
                     "completion_tokens": estimate_tokens(text), "fallback": True}
