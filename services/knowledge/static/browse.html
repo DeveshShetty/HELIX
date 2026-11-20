@@ -4,17 +4,45 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Helix Cloud Knowledge Base</title>
+<script>/* apply the saved theme (or the OS setting) before the page paints */(function(){var t=localStorage.getItem("helix-theme");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t;})();</script>
 <style>
-  :root { --bg: #f4f5f7; --panel: #fff; --ink: #1d2330; --muted: #6b7280; --line: #e3e6eb; --accent: #2f5bea;
-          --rb: #2f5bea; --faq: #16794c; --inc: #9a5b00; --learned: #6941c6; }
+
+  /* Helix theme: light by default; dark via [data-theme=dark] (set from the toggle or the OS). */
+  :root {
+    --bg: #f3f5f4; --panel: #ffffff; --sunken: #f7f9f8; --ink: #17201f; --muted: #5d6b69; --line: #dbe2e0;
+    --accent: #0f7c74; --on-accent: #ffffff; --accent-soft: #e4f2f0; --accent-line: #b9dcd8; --focus: #0f7c74;
+    --ok: #1f7a4d; --ok-bg: #e3f3ea; --warn: #9a5b00; --warn-bg: #fbf0dc; --bad: #b42318; --bad-bg: #fde8e7;
+    --deg: #6941c6; --deg-bg: #efe9fb; --agent-bg: #fdf5e6; --agent-line: #eed8ac;
+    --rb: var(--accent); --faq: var(--ok); --inc: var(--warn); --learned: var(--deg);
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1514; --panel: #172220; --sunken: #121b1a; --ink: #e4ecea; --muted: #93a5a2; --line: #2b3b39;
+    --accent: #3cc0b2; --on-accent: #06201d; --accent-soft: #16322f; --accent-line: #24504b; --focus: #3cc0b2;
+    --ok: #5cc98f; --ok-bg: #15301f; --warn: #e8ad57; --warn-bg: #33270f; --bad: #f08a7f; --bad-bg: #3a1a17;
+    --deg: #b9a3f0; --deg-bg: #2a2140; --agent-bg: #2a2314; --agent-line: #4d3f1f;
+    color-scheme: dark;
+  }
+  body { transition: background-color .2s, color .2s; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  h1 .mark { width: 22px; height: 22px; color: var(--accent); flex: none; }
+  h1.brand { display: flex; align-items: center; gap: 8px; }
+  .theme { font: inherit; font-size: 15px; line-height: 1; width: 34px; height: 30px; border-radius: 8px; cursor: pointer;
+           border: 1px solid var(--line); background: var(--panel); color: var(--ink); flex: none; }
+  .theme:hover { border-color: var(--accent); color: var(--accent); }
+  input, select, textarea { color: var(--ink); background-color: var(--panel); }
+  ::placeholder { color: var(--muted); opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { *, body { transition: none !important; animation: none !important; } }
   * { box-sizing: border-box; }
   body { margin: 0; font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
-  header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 14px 20px; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 14px 20px;
+           display: flex; align-items: flex-start; gap: 16px; }
+  header .titles { flex: 1; }
   header h1 { font-size: 17px; margin: 0 0 2px; }
   header p { margin: 0; color: var(--muted); font-size: 13px; }
   main { max-width: 900px; margin: 0 auto; padding: 18px 20px 40px; }
   .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-  input, select { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  input, select { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
   input { flex: 1; min-width: 220px; }
   .count { color: var(--muted); font-size: 13px; }
   details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
@@ -30,8 +58,11 @@
 </head>
 <body>
 <header>
-  <h1>Helix Cloud Knowledge Base</h1>
+  <div class="titles">
+  <h1 class="brand"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 2c0 7 10 7 10 10s-10 3-10 10"/><path d="M17 2c0 7-10 7-10 10s10 3 10 10"/><path d="M9.5 6.5h5M9.5 17.5h5" stroke-width="1.6"/></svg>Helix Cloud Knowledge Base</h1>
   <p>Everything the support assistant can answer from: how-to guides (runbooks), FAQs, and past incidents, including fixes it learned from resolved tickets.</p>
+  </div>
+  <button class="theme" id="themeBtn" type="button" aria-label="Switch to dark mode">&#9790;</button>
 </header>
 <main>
   <div class="controls">
@@ -66,6 +97,24 @@ function render() {
 }
 fetch('/documents').then(r => r.json()).then(d => { docs = d; render(); });
 q.oninput = kind.onchange = render;
+</script>
+<script>
+(function () {
+  const btn = document.getElementById('themeBtn');
+  const label = () => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    btn.textContent = dark ? '\u2600' : '\u263E';
+    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.title = btn.getAttribute('aria-label');
+  };
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('helix-theme', next);
+    label();
+  });
+  label();
+})();
 </script>
 </body>
 </html>
