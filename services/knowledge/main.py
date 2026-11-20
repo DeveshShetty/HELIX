@@ -29,6 +29,7 @@ from fastapi.responses import FileResponse
 from prometheus_client import Counter, Gauge
 from pydantic import BaseModel, Field
 
+from common import budget
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
@@ -135,12 +136,28 @@ def embed_input(doc: dict, chunk_text: str) -> str:
     return f"{doc['title']}\n{doc['tags']}\n{chunk_text}"
 
 
+class BudgetExhausted(Exception):
+    """The shared daily AI budget is used up: this embedding was skipped."""
+
+
 def embed_texts(embedder, texts: list[str], purpose: str) -> list:
-    """All embedding calls go through here so their (notional) cost is counted."""
+    """All embedding calls go through here so their (notional) cost is counted.
+
+    Calls to a model that costs money (any model but the local hash-v1) are checked
+    against the SHARED daily AI budget first (common/budget.py) and recorded in it.
+    On the cap this raises BudgetExhausted; callers skip the embedding.
+    """
     tokens = sum(max(1, len(t) // 4) for t in texts)
+    cost = tokens / 1000 * EMBED_PRICE_PER_1K.get(embedder.name, 0.0)
+    paid = embedder.name != "hash-v1"
+    if paid and not budget.allow(SERVICE, purpose):
+        raise BudgetExhausted(f"daily AI budget used up; {purpose} embedding skipped")
+    vectors = embedder.embed(texts)
     EMBED_TOKENS.labels(embedder.name, purpose).inc(tokens)
-    EMBED_COST.labels(embedder.name, purpose).inc(tokens / 1000 * EMBED_PRICE_PER_1K.get(embedder.name, 0.0))
-    return embedder.embed(texts)
+    EMBED_COST.labels(embedder.name, purpose).inc(cost)
+    if paid:
+        budget.record(SERVICE, purpose, embedder.name, tokens, cost)
+    return vectors
 
 
 def embed_document(embedder, doc: dict, purpose: str = "index") -> list[tuple[str, str, list | dict]]:
@@ -254,12 +271,17 @@ def index_document(doc: dict, origin: str, event_id: str | None = None,
                    ticket_revision: tuple[str, int] | None = None) -> str:
     """Upsert a document into the active index.
 
-    Returns "indexed", "duplicate" (event_id already processed) or "stale"
-    (a newer revision of this ticket was already applied).
+    Returns "indexed", "duplicate" (event_id already processed), "stale"
+    (a newer revision of this ticket was already applied) or "stored_unindexed"
+    (the daily AI budget is used up: the document is saved, but not searchable
+    until the next index rebuild).
     """
     with _lock:
         embedder, version, model = _cache["embedder"], _cache["version"], _cache["model"]
-    rows = embed_document(embedder, doc)                 # network call for Ollama: keep it outside the txn
+    try:
+        rows = embed_document(embedder, doc)             # network call for Ollama: keep it outside the txn
+    except BudgetExhausted:
+        rows = None
     conn = connect(DB_PATH)
     try:
         conn.execute("BEGIN IMMEDIATE")
@@ -276,7 +298,10 @@ def index_document(doc: dict, origin: str, event_id: str | None = None,
             conn.execute("INSERT OR REPLACE INTO incident_revisions VALUES (?,?,'INDEXED',?)",
                          (tid, rev, time.time()))
         upsert_document_row(conn, doc, origin)
-        write_chunks(conn, version, model, doc["doc_id"], rows)
+        if rows is None:                                 # budget: keep the text, drop stale vectors
+            conn.execute("DELETE FROM chunks WHERE version=? AND doc_id=?", (version, doc["doc_id"]))
+        else:
+            write_chunks(conn, version, model, doc["doc_id"], rows)
         if event_id:
             mark_processed(conn, event_id)
         n = conn.execute("SELECT COUNT(*) FROM chunks WHERE version=?", (version,)).fetchone()[0]
@@ -287,9 +312,9 @@ def index_document(doc: dict, origin: str, event_id: str | None = None,
         raise
     finally:
         conn.close()
-    REINDEX.labels(origin, "ok").inc()
+    REINDEX.labels(origin, "ok" if rows is not None else "budget_skipped").inc()
     refresh_cache()
-    return "indexed"
+    return "indexed" if rows is not None else "stored_unindexed"
 
 
 def withdraw_incident(ticket_id: str, revision: int, event_id: str) -> str:
@@ -447,6 +472,8 @@ def search(body: SearchIn):
         raise HTTPException(503, "index not ready")
     try:
         q = embed_texts(embedder, [body.query], "query")[0]
+    except BudgetExhausted as exc:
+        raise HTTPException(503, str(exc))
     except Exception as exc:
         raise HTTPException(503, f"embedding model unavailable: {exc!r}")
     best: dict[str, tuple[float, dict]] = {}

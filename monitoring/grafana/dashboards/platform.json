@@ -841,6 +841,56 @@
           }
         }
       ]
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Shared daily AI budget: tokens used and calls skipped",
+      "description": "One budget for chat answers, knowledge embeddings and summariser drafts (common/budget.py). Skipped calls degrade: chat escalates, summariser drafts without AI, knowledge skips the embedding.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 59
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(ai_budget_tokens_today)",
+          "legendFormat": "tokens used today (all services)"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (service, purpose) (increase(ai_budget_denied_total[5m]))",
+          "legendFormat": "skipped {{service}}/{{purpose}} (5m)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
     }
   ]
 }

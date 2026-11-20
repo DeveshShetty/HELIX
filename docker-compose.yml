@@ -6,6 +6,10 @@ x-service-env: &service-env
   MAX_DELIVERY_ATTEMPTS: ${MAX_DELIVERY_ATTEMPTS:-5}        # consumer: then dead-letter
   OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-10}           # outbox relay: then park the event
   ESCALATION_MAX_ATTEMPTS: ${ESCALATION_MAX_ATTEMPTS:-10}   # chat escalation worker: then alert
+  # ONE daily AI budget shared by chat, knowledge and summariser (common/budget.py)
+  AI_BUDGET_DB: /budget/ai_budget.db
+  DAILY_COST_CEILING_USD: ${DAILY_COST_CEILING_USD:-0.50}
+  DAILY_TOKEN_CEILING: ${DAILY_TOKEN_CEILING:-200000}
 
 x-depends-rabbit: &depends-rabbit
   rabbitmq:
@@ -33,13 +37,12 @@ services:
       # one threshold PER EMBEDDING MODEL; a model missing here => always escalate
       # provisional: from eval/results/threshold_curve.csv on the 50-question set (hash-v1)
       CONFIDENCE_THRESHOLDS: ${CONFIDENCE_THRESHOLDS:-{"hash-v1":0.40}}
-      DAILY_COST_CEILING_USD: ${DAILY_COST_CEILING_USD:-0.50}
       MAX_PROMPT_TOKENS: ${MAX_PROMPT_TOKENS:-1500}
       LLM_MODE: ${LLM_MODE:-simulated}          # simulated | ollama
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
     extra_hosts: ["host.docker.internal:host-gateway"]   # reach Ollama on the host
-    volumes: [chat_data:/data]
+    volumes: [chat_data:/data, ai_budget:/budget]
     ports: ["8001:8001"]           # chat UI: http://localhost:8001
     depends_on: *depends-rabbit
 
@@ -70,7 +73,7 @@ services:
     environment:
       <<: *service-env
       DB_PATH: /data/knowledge.db
-    volumes: [knowledge_data:/data]
+    volumes: [knowledge_data:/data, ai_budget:/budget]
     ports: ["8004:8004"]
     depends_on: *depends-rabbit
 
@@ -84,7 +87,7 @@ services:
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
     extra_hosts: ["host.docker.internal:host-gateway"]
-    volumes: [summariser_data:/data]
+    volumes: [summariser_data:/data, ai_budget:/budget]
     ports: ["8005:8005"]
     depends_on: *depends-rabbit
 
@@ -114,3 +117,4 @@ volumes:
   oncall_data:
   knowledge_data:
   summariser_data:
+  ai_budget:          # shared daily AI spend ledger (common/budget.py)

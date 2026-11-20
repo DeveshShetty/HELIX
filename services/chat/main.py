@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 from common.circuit_breaker import CircuitOpenError
 from common.db import relay_forever, start_daemon
 from common.observability import instrument
-from common import guard
+from common import budget, guard
 from services.chat import clients, llm
 from services.chat.conversations import ConversationStore
 from services.chat.store import DecisionStore
@@ -46,8 +46,9 @@ TOP_K = int(os.getenv("TOP_K", "3"))
 THRESHOLDS: dict[str, float] = json.loads(os.getenv("CONFIDENCE_THRESHOLDS", '{"hash-v1": 0.30}'))
 
 MAX_PROMPT_TOKENS = int(os.getenv("MAX_PROMPT_TOKENS", "1500"))          # per query
-DAILY_TOKEN_CEILING = int(os.getenv("DAILY_TOKEN_CEILING", "200000"))     # per UTC day
-DAILY_COST_CEILING_USD = float(os.getenv("DAILY_COST_CEILING_USD", "0.50"))
+# Daily ceilings are SHARED with Knowledge and the Summariser (common/budget.py).
+DAILY_TOKEN_CEILING = budget.DAILY_TOKEN_CEILING                          # per UTC day, all services
+DAILY_COST_CEILING_USD = budget.DAILY_COST_CEILING_USD
 
 # Pages are small and change with every release: never let a browser serve a stale copy.
 NO_CACHE = {"Cache-Control": "no-store"}
@@ -151,11 +152,6 @@ def compute_confidence(question: str, passage: dict) -> tuple[float, float]:
     if any(any(ch.isdigit() for ch in t) and t not in p for t in q):
         confidence *= IDENTIFIER_PENALTY
     return round(confidence, 3), round(coverage, 3)
-
-
-def utc_midnight() -> float:
-    now = time.time()
-    return now - (now % 86400)
 
 
 # ------------------------------------------------------------------ escalation (outbox)
@@ -272,10 +268,8 @@ def chat(body: ChatIn):
                  reason="needs_clarification" if reply == CLARIFY else "small_talk")
         return _finish(d)
 
-    # 3. daily ceiling: stop spending on the LLM, hand over to humans
-    tokens_today, cost_today = store.spend_since(utc_midnight())
-    DAILY_SPEND.set(cost_today)
-    if cost_today >= DAILY_COST_CEILING_USD or tokens_today >= DAILY_TOKEN_CEILING:
+    # 3. shared daily AI ceiling (all services): stop spending on the LLM, hand over to humans
+    if not budget.allow(SERVICE, "answer"):
         d["reason"] = "daily_budget_exhausted"
         return _finish(_escalate(d, question, [], "I can't answer any more questions automatically today."))
 
@@ -354,6 +348,8 @@ def _account(d: dict, gen: dict) -> None:
     TOKENS.labels(gen["model"], "prompt").inc(gen["prompt_tokens"])
     TOKENS.labels(gen["model"], "completion").inc(gen["completion_tokens"])
     COST.labels(gen["model"]).inc(d["cost_usd"])
+    budget.record(SERVICE, "answer", gen["model"], gen["prompt_tokens"] + gen["completion_tokens"], d["cost_usd"])
+    DAILY_SPEND.set(budget.today()[1])
 
 
 def _finish(d: dict) -> dict:
@@ -522,13 +518,14 @@ def close_conversation(cid: str, body: CloseIn):
 
 @app.get("/config")
 def config():
-    tokens_today, cost_today = store.spend_since(utc_midnight())
+    tokens_today, cost_today = budget.today()
     return {"thresholds": THRESHOLDS, "llm_mode": llm.LLM_MODE,
             "model": llm.OLLAMA_MODEL if llm.LLM_MODE == "ollama" else "simulated",
             "prompt_version": llm.PROMPT_VERSION, "kb_breaker": clients.kb_breaker.state.value,
             "budget": {"max_prompt_tokens": MAX_PROMPT_TOKENS, "daily_token_ceiling": DAILY_TOKEN_CEILING,
                        "daily_cost_ceiling_usd": DAILY_COST_CEILING_USD, "tokens_today": tokens_today,
-                       "cost_today_usd": round(cost_today, 6)},
+                       "cost_today_usd": round(cost_today, 6),
+                       "shared_with": ["knowledge", "summariser"], "by_service": budget.by_service()},
             "escalations_pending": store.pending_count()}
 
 

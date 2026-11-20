@@ -30,7 +30,7 @@ from fastapi import FastAPI, HTTPException
 from prometheus_client import Counter, Gauge
 from pydantic import BaseModel, Field
 
-from common import guard
+from common import budget, guard
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
 from common.http import request_json
 from common.messaging import consume_forever
@@ -252,7 +252,9 @@ def llm_draft(msgs: list[dict]) -> tuple[dict | None, str]:
     c_tok = data.get("eval_count") or 0
     TOKENS.labels(OLLAMA_MODEL, "prompt").inc(p_tok)
     TOKENS.labels(OLLAMA_MODEL, "completion").inc(c_tok)
-    COST.labels(OLLAMA_MODEL).inc(p_tok / 1000 * PRICE_PROMPT_PER_1K + c_tok / 1000 * PRICE_COMPLETION_PER_1K)
+    cost = p_tok / 1000 * PRICE_PROMPT_PER_1K + c_tok / 1000 * PRICE_COMPLETION_PER_1K
+    COST.labels(OLLAMA_MODEL).inc(cost)
+    budget.record(SERVICE, "summary", OLLAMA_MODEL, p_tok + c_tok, cost)     # shared daily AI budget
     out = data["message"]["content"].replace("*", "").strip()      # small models often bold the labels
     title = re.search(r"TITLE\s*:\s*(.+)", out, re.I)
     symptoms = re.search(r"SYMPTOMS?\s*:\s*(.+)", out, re.I)
@@ -284,7 +286,13 @@ def draft(msgs: list[dict]) -> tuple[str, str, str, list[dict], dict | None]:
     title = body = None
     method = "rule-based"
 
-    if LLM_MODE == "ollama":
+    use_llm = LLM_MODE == "ollama"
+    if use_llm and not budget.allow(SERVICE, "summary"):
+        # shared daily AI budget used up (common/budget.py): degrade to the rule-based draft
+        use_llm = False
+        checks.append({"check": "ai_budget", "ok": False,
+                       "detail": "Daily AI budget used up: drafted without the AI"})
+    if use_llm:
         try:
             got, raw = llm_draft(msgs)
             if got is None:

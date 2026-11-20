@@ -238,6 +238,60 @@ Trade-off to state in the report: skipping a failed outbox event means later eve
 published before it. Knowledge already orders by ticket revision; On-Call does not for
 opened/acked (both revision 0, listed as a known limitation).
 
+## E13. One daily AI budget for all services (audit fix 3)
+
+Before: only Chat's answers counted against the daily ceiling. Knowledge embeddings and
+Summariser drafts were metered but never stopped. Now `common/budget.py` keeps one ledger
+(SQLite on the `ai_budget` volume, mounted in chat, knowledge and summariser). Every model call
+is recorded there, and every service checks the same day total before it spends.
+
+Run on 2026-11-21, `LLM_MODE=ollama` (llama3.2:1b), `DAILY_TOKEN_CEILING=700` (tiny on purpose):
+
+```
+1. conversation.closed -> summariser S-7 drafted (llama3.2:1b (summary-v3-article))
+   budget: tokens_today 427, by_service {summariser: 427 tokens, $0.000095}
+2. chat "how do I reset my password"               -> answer / grounded
+   chat "how do I export my data"                  -> escalate / daily_budget_exhausted
+   chat "how do I enable two-factor authentication" -> escalate / daily_budget_exhausted
+   chat "how do I cancel my subscription"          -> escalate / daily_budget_exhausted
+   budget: tokens_today 702, by_service {chat: 275, summariser: 427}
+3. conversation.closed after the cap:
+   summariser  [budget] summariser/summary denied: today 702 tokens, $0.000182 (ceiling 700 tokens / $0.5)
+   summariser  S-8 drafted (rule-based (AI draft not used)); checks failed: ['ai_budget']
+metrics: ai_budget_denied_total{service="chat",purpose="answer"} 3
+         ai_budget_denied_total{service="summariser",purpose="summary"} 1
+         ai_budget_tokens_today 702 (same value on :8001 and :8005: one shared counter)
+```
+
+So the Summariser's spend used up Chat's room: Chat answered once and then escalated.
+
+Knowledge: the only paid embedder is nomic-embed-text, and it is **not installed** on this
+machine (Ollama has llama3.2:1b only). `scripts/check_kb_budget.py` runs the real
+`embed_texts`/`index_document` code against a throw-away DB, with a stand-in embedder priced
+and metered as nomic-embed-text:
+
+```
+[budget] knowledge/index denied: today 728 tokens, $0.000183 (ceiling 700 tokens / $0.5)
+index_document: stored_unindexed              <- document saved, no chunks; next rebuild indexes it
+[budget] knowledge/query denied: …
+query embedding: skipped -> daily AI budget used up; query embedding skipped   (/search -> 503)
+document stored: 1 | chunks indexed: 0
+ai_budget_denied_total{service=knowledge,purpose=index} 1, {…,purpose=query} 1
+with the ceiling raised: index_document: indexed, chunks indexed: 1
+```
+
+The live KB on hash-v1 (local and free, not counted) kept answering `/search` over the cap.
+
+Limits, not verified or not handled:
+- A real nomic-embed-text run against the cap was not done (the model is not installed).
+- Check-then-spend has no reservation, so two services can each pass the check just before
+  the ceiling and overshoot it by one call.
+- The ledger is a file on one Docker host. It does not work across machines.
+- Chat's per-decision cost stamps (decisions table) are unchanged; the ceiling now reads the
+  shared ledger.
+
+Grafana panel "Shared daily AI budget: tokens used and calls skipped".
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).
