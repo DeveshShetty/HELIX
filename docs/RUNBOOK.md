@@ -50,7 +50,7 @@ Shorter ack timeout for demos: `ACK_TIMEOUT_SECONDS=10 docker compose up -d onca
 |---|---|---|
 | `no configuration file provided` | Command run outside the repo folder | `cd` into the repo |
 | RabbitMQ exits with `.erlang.cookie: eacces` | Windows volume permissions | Already handled by the named `rabbitmq_data` volume; `docker compose down -v` if it persists |
-| Every question escalates with `uncalibrated_model` | Index rebuilt with a model that has no threshold | Add it to `CONFIDENCE_THRESHOLDS` after running `eval/run_eval.py` |
+| Every question escalates with `uncalibrated_index` | Index rebuilt with a model (or, in strict mode, a version) that has no threshold | Run `eval/run_eval.py` on the new index and add `"<index_version>": <threshold>` to `CONFIDENCE_THRESHOLDS` |
 | Every question escalates with `daily_budget_exhausted` | Daily ceiling reached | Raise `DAILY_COST_CEILING_USD` or wait for 00:00 UTC |
 | `LLM_MODE=ollama` answers are slow / `degraded` | llama3.2:1b on CPU; first call loads the model | Expected; answers fall back to extractive text if ungrounded |
 
@@ -63,5 +63,5 @@ curl -X POST localhost:8004/index/rebuild -H "Content-Type: application/json" \
 curl localhost:8004/index        # watch BUILDING -> ACTIVE; the old version becomes RETIRED
 ```
 Until a threshold for `nomic-embed-text` is calibrated and added to
-`CONFIDENCE_THRESHOLDS`, Chat escalates everything (`uncalibrated_model`).
+`CONFIDENCE_THRESHOLDS`, Chat escalates everything (`uncalibrated_index`).
 That is deliberate: an uncalibrated threshold would be a guess.

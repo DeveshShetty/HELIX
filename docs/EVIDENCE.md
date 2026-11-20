@@ -443,6 +443,94 @@ regression.
 Not covered: the HTTP layer of chat and on-call, the escalation ladder timer, and anything
 needing a real RabbitMQ or Ollama. Those are covered only by the demo scripts (E1–E15).
 
+## E17. Threshold keyed by index version; v2 index with nomic-embed-text (audit fix 7)
+
+`CONFIDENCE_THRESHOLDS` keys can now be index versions (an exact match wins) or embedding
+models (the fallback). With `THRESHOLD_STRICT=1`, an index version that nobody calibrated
+always escalates (`uncalibrated_index`). Every decision is stamped with `threshold_key`
+(`index:<version>` or `model:<name>`), and the metric `chat_threshold_lookups_total{source}`
+counts which kind of key answered. Run on 2026-11-21:
+
+```
+1 [by-version]        answer/grounded threshold=0.4 threshold_key=index:hash-v1-20261117T190438
+2 [model-fallback]    answer/grounded threshold=0.4 threshold_key=model:hash-v1
+3 [strict, calibrated] answer/grounded … index:hash-v1-20261117T190438
+  rebuild (same model) -> active index hash-v1-20261120T225640
+  [strict, new version] escalate/uncalibrated_index threshold=None
+4 [strict, new version calibrated] answer/grounded threshold=0.4 threshold_key=index:hash-v1-20261120T225640
+```
+
+So a rebuild with the same model counts as a new, uncalibrated index in strict mode. The
+default (non-strict) falls back to the model threshold and records that it did.
+
+**v2 rebuild with nomic-embed-text (real, via Ollama on the host).** `nomic-embed-text` was
+pulled with the user's OK (274 MB).
+- First attempt: `status=FAILED error=ReadTimeout` after 61 s. The model was loading cold.
+  The active hash-v1 index stayed in service (build-alongside-then-switch worked).
+- Second attempt, model warm: `nomic-embed-text-20261120T234241 ACTIVE, 44 chunks, 8–10 s`.
+- Calibration (`eval/run_eval.py`, 54 questions, 43 reach retrieval). The first try failed:
+  a nomic query embedding takes 240–380 ms but spikes to 7.6 s on this CPU, so Chat's 2 s KB
+  deadline timed out and the breaker opened (43 × `kb_unavailable`). `KB_TIMEOUT` and
+  `KB_BUDGET` are now settable in compose. With 10 s / 12 s:
+
+| threshold | nomic v2: answer rate | wrong-answer rate | false escalations | hash-v1: answer rate | wrong-answer rate |
+|---|---|---|---|---|---|
+| 0.40 | 97% | 21% | 1 | 100% | 6.7% |
+| 0.60 | 93% | 12% | 2 | | |
+| 0.75 | 77% | 5% | 7 | | |
+| 0.80 | 77% | 2% | 7 | | |
+| 0.90 | 47% | 0% | 16 | | |
+
+Curve: `eval/results/threshold_curve_nomic-embed-text-20261120T234241.csv/.svg`. Eval run took 310 s.
+
+What this shows:
+1. The hash-v1 threshold (0.40) is wrong for nomic: 21% wrong answers. That is exactly the
+   mismatch keying by index version prevents.
+2. On this 54-question set nomic is not better than hash-v1. To get hash-v1's wrong-answer
+   rate (about 5–7%), nomic needs ~0.75, which gives up a quarter of the answerable
+   questions. The set is small and written in the KB's own vocabulary, which favours the
+   lexical hash-v1.
+3. nomic adds latency, with spikes past the default 2 s KB deadline on a laptop CPU.
+
+Decision left to the team (not made here): hash-v1 stays the default index. A nomic threshold
+is not added to the compose defaults. If the team switches, the candidate from this run is
+`"nomic-embed-text-20261120T234241": 0.80` with `KB_TIMEOUT=10`. After the run, the stack was
+switched back to hash-v1 (`hash-v1-20261120T234922`, threshold via `model:hash-v1`).
+
+## E18. Evidence capture script (audit fix 8)
+
+`bash scripts/capture_evidence.sh` runs kb-down, tickets-down, broker-down, oncall-restart,
+duplicate and poison. For each scenario it saves the demo output and service logs, plus
+before/after metrics, Prometheus alerts and queue depths, to `docs/evidence/<timestamp>/`.
+Full run on 2026-11-21: `docs/evidence/20261120T233307Z/` (16 files).
+
+```
+kb-down        answer (1117 ms) -> 5 x escalate/kb_unavailable (3153, 2935, 2408 ms, then 473, 510 ms with the
+               breaker OPEN) -> knowledge started -> half-open probe -> answer 514 ms, breaker CLOSED
+tickets-down   escalate, ticket=queued (6816 ms); escalations waiting: 1 -> after start:
+               delivered as T-000075 after 3 failed attempts, same Idempotency-Key, no duplicate
+broker-down    3 tickets created with RabbitMQ stopped, outbox pending 3 -> 0 after start
+oncall-restart alice PENDING -> oncall restarted mid-timer -> after 30 s: alice TIMED_OUT, bob PENDING
+duplicate      replayed incident.resolved and incident.opened: knowledge "duplicate", oncall
+               "duplicate … ignored" (x2)
+poison         valid event processed while the poison message was retried: True; DLQ depth +1;
+               alert MessagesDeadLettered firing
+```
+
+Bug found by the first run: `demo.py poison` and the capture script read logs with
+`docker compose logs --since …`. Docker Desktop's VM clock had drifted from the host clock,
+so `--since` returned nothing: empty log files, and a false "valid event processed: False".
+Both now use `--tail`. The first run was deleted and the run above repeated.
+
+Grafana screenshots to take by hand (the script cannot capture the dashboard):
+1. kb-down: "Circuit breaker state" going CLOSED → OPEN → CLOSED, and chat decisions by
+   reason showing `kb_unavailable`.
+2. broker-down: "Outbox backlog" rising and draining.
+3. poison: "Poison messages: retries and dead-lettered" and "Dead-lettered (total)"; also
+   Prometheus → Alerts showing `MessagesDeadLettered` firing.
+4. AI budget: "Shared daily AI budget" panel during a tiny-cap run (E13).
+5. Load test: request rate and latency panels during `scripts/load_test.py` (E19).
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).

@@ -57,6 +57,9 @@ class DecisionStore:
         self.db_path = db_path
         conn = connect(db_path)
         conn.executescript(DDL)
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(decisions)")}
+        if "threshold_key" not in cols:              # added with index-versioned thresholds
+            conn.execute("ALTER TABLE decisions ADD COLUMN threshold_key TEXT")
         conn.close()
 
     # ------------------------------------------------------------ decisions
@@ -66,13 +69,14 @@ class DecisionStore:
             conn.execute(
                 """INSERT INTO decisions(decision_id, conversation_id, message, decision, reason,
                    confidence, threshold, citations, ticket_id, degraded, model, prompt_version,
-                   index_version, embedding_model, prompt_tokens, completion_tokens, cost_usd, created_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                   index_version, embedding_model, prompt_tokens, completion_tokens, cost_usd, created_at,
+                   threshold_key)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (d["decision_id"], d["conversation_id"], d["message"], d["decision"], d["reason"],
                  d["confidence"], d["threshold"], json.dumps(d["citations"]), d["ticket_id"],
                  int(d["degraded"]), d["model"], d["prompt_version"], d["index_version"],
                  d["embedding_model"], d["tokens"]["prompt"], d["tokens"]["completion"],
-                 d["cost_usd"], time.time()),
+                 d["cost_usd"], time.time(), d.get("threshold_key")),
             )
         finally:
             conn.close()

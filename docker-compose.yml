@@ -46,10 +46,16 @@ services:
       DB_PATH: /data/chat.db
       KNOWLEDGE_URL: http://knowledge:8004
       TICKETS_URL: http://tickets:8002
-      # one threshold PER EMBEDDING MODEL; a model missing here => always escalate
-      # provisional: from eval/results/threshold_curve.csv on the 50-question set (hash-v1)
-      CONFIDENCE_THRESHOLDS: ${CONFIDENCE_THRESHOLDS:-{"hash-v1":0.40}}
+      # thresholds keyed by INDEX VERSION (exact match wins) or embedding model (fallback);
+      # 0.40 is from eval/results/threshold_curve.csv on index hash-v1-20261117T190438.
+      # THRESHOLD_STRICT=1: an index version not listed here always escalates.
+      CONFIDENCE_THRESHOLDS: ${CONFIDENCE_THRESHOLDS:-{"hash-v1-20261117T190438":0.40,"hash-v1":0.40}}
+      THRESHOLD_STRICT: ${THRESHOLD_STRICT:-0}
       MAX_PROMPT_TOKENS: ${MAX_PROMPT_TOKENS:-1500}
+      # KB call deadline per attempt / for all attempts. 2 s suits hash-v1; a nomic-embed-text
+      # query takes 2.5-3.6 s on a laptop CPU, so the v2 index needs a longer deadline (E17).
+      KB_TIMEOUT: ${KB_TIMEOUT:-2.0}
+      KB_BUDGET: ${KB_BUDGET:-3.0}
       LLM_MODE: ${LLM_MODE:-simulated}          # simulated | ollama
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
@@ -88,6 +94,8 @@ services:
     environment:
       <<: *service-env
       DB_PATH: /data/knowledge.db
+      OLLAMA_URL: http://host.docker.internal:11434      # nomic-embed-text for the v2 index
+    extra_hosts: ["host.docker.internal:host-gateway"]
     volumes: [knowledge_data:/data, ai_budget:/budget]
     ports: ["8004:8004"]
     depends_on: *depends-rabbit

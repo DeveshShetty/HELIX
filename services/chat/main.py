@@ -6,8 +6,8 @@ For each message:
   3. daily cost/token ceiling reached                  -> escalate (cost control)
   4. retrieve from the Knowledge Base                  (deadline + retry budget + circuit breaker)
        KB unavailable / circuit open                   -> escalate, degraded (never guess)
-  5. look up the threshold calibrated for the index's EMBEDDING MODEL
-       no calibrated threshold for that model          -> escalate
+  5. look up the threshold calibrated for this INDEX VERSION (else its embedding model)
+       no calibrated threshold                         -> escalate
   6. sanitise retrieved passages (indirect injection)
   7. confidence from retrieval (deterministic per index version)
        confidence < threshold                          -> escalate
@@ -45,9 +45,23 @@ SERVICE = "chat"
 DB_PATH = os.getenv("DB_PATH", "/data/chat.db")
 TOP_K = int(os.getenv("TOP_K", "3"))
 
-# A threshold is only meaningful for the embedding model it was calibrated on:
-# similarity scores from different models have different scales.
+# A threshold is only meaningful for the index it was calibrated on: scores from different
+# models have different scales, and even a rebuild with the same model changes them (new
+# vocabulary/IDF, re-chunking). Keys are index versions ("hash-v1-20261117T190438") or, as a
+# fallback, embedding models ("hash-v1"). Lookup: exact index version first; then the model,
+# unless THRESHOLD_STRICT=1, in which case an index nobody calibrated always escalates.
+# Every decision is stamped with the key that was used (threshold_key).
 THRESHOLDS: dict[str, float] = json.loads(os.getenv("CONFIDENCE_THRESHOLDS", '{"hash-v1": 0.30}'))
+THRESHOLD_STRICT = os.getenv("THRESHOLD_STRICT", "0") == "1"
+
+
+def threshold_for(index_version: str | None, embedding_model: str | None) -> tuple[float | None, str | None]:
+    """(threshold, key used). key is "index:<version>", "model:<name>" or None (uncalibrated)."""
+    if index_version in THRESHOLDS:
+        return THRESHOLDS[index_version], f"index:{index_version}"
+    if not THRESHOLD_STRICT and embedding_model in THRESHOLDS:
+        return THRESHOLDS[embedding_model], f"model:{embedding_model}"
+    return None, None
 
 MAX_PROMPT_TOKENS = int(os.getenv("MAX_PROMPT_TOKENS", "1500"))          # per query
 # Daily ceilings are SHARED with Knowledge and the Summariser (common/budget.py).
@@ -69,6 +83,9 @@ TOKENS = Counter("llm_tokens_total", "LLM tokens used", ["model", "kind"])
 COST = Counter("llm_cost_usd_total", "Notional LLM cost in USD", ["model"])
 DAILY_SPEND = Gauge("llm_daily_spend_usd", "Notional LLM spend so far today (UTC)")
 DAILY_CEILING = Gauge("llm_daily_ceiling_usd", "Daily LLM cost ceiling")
+THRESHOLD_LOOKUPS = Counter("chat_threshold_lookups_total",
+                            "Which threshold key answered: index (calibrated for this index version), "
+                            "model (fallback) or none (uncalibrated -> escalate)", ["source"])
 ESCALATIONS_PENDING = Gauge("escalations_pending", "Escalations waiting for the Ticket Service")
 DAILY_CEILING.set(DAILY_COST_CEILING_USD)
 
@@ -249,7 +266,7 @@ def chat(body: ChatIn):
         "message": question, "decision": "escalate", "answer": "", "confidence": None,
         "threshold": None, "citations": [], "ticket_id": None, "escalation_pending": False,
         "degraded": False, "reason": "low_confidence", "model": None,
-        "prompt_version": llm.PROMPT_VERSION, "index_version": None, "embedding_model": None,
+        "prompt_version": llm.PROMPT_VERSION, "index_version": None, "embedding_model": None, "threshold_key": None,
         "sources": [], "tokens": {"prompt": 0, "completion": 0}, "cost_usd": 0.0, "request_id": log.current(),
         "dry_run": body.dry_run,
     }
@@ -295,10 +312,11 @@ def chat(body: ChatIn):
     d["embedding_model"] = kb.get("embedding_model")
     results = kb.get("results", [])
 
-    # 5. the threshold belongs to the embedding model it was calibrated on
-    d["threshold"] = THRESHOLDS.get(d["embedding_model"])
+    # 5. the threshold belongs to the index (version) it was calibrated on
+    d["threshold"], d["threshold_key"] = threshold_for(d["index_version"], d["embedding_model"])
+    THRESHOLD_LOOKUPS.labels((d["threshold_key"] or "none:").split(":")[0]).inc()
     if d["threshold"] is None:
-        d["reason"] = "uncalibrated_model"
+        d["reason"] = "uncalibrated_index"
         return _finish(_escalate(d, question, [r["doc_id"] for r in results],
                                  "I'm being updated at the moment, and I'd rather not guess."))
 
@@ -369,7 +387,7 @@ def _finish(d: dict) -> dict:
         if d["ticket_id"]:
             convs.link_ticket(d["conversation_id"], d["ticket_id"])
     logger.info(f"[decision] {d['decision_id']} {d['decision']}/{d['reason']} conf={d['confidence']} "
-          f"thr={d['threshold']} emb={d['embedding_model']} ticket={d['ticket_id']}")
+          f"thr={d['threshold']} ({d['threshold_key']}) emb={d['embedding_model']} ticket={d['ticket_id']}")
     return {k: v for k, v in d.items() if k != "message"}
 
 
@@ -526,7 +544,7 @@ def close_conversation(cid: str, body: CloseIn):
 @app.get("/config")
 def config():
     tokens_today, cost_today = budget.today()
-    return {"thresholds": THRESHOLDS, "llm_mode": llm.LLM_MODE,
+    return {"thresholds": THRESHOLDS, "threshold_strict": THRESHOLD_STRICT, "llm_mode": llm.LLM_MODE,
             "model": llm.OLLAMA_MODEL if llm.LLM_MODE == "ollama" else "simulated",
             "prompt_version": llm.PROMPT_VERSION, "kb_breaker": clients.kb_breaker.state.value,
             "budget": {"max_prompt_tokens": MAX_PROMPT_TOKENS, "daily_token_ceiling": DAILY_TOKEN_CEILING,

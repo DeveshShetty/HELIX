@@ -175,7 +175,7 @@ Ticket Service is unreachable.
 | `injection_detected` | refused | the user's message tried to override instructions |
 | `low_confidence` | escalate | confidence < threshold for this embedding model |
 | `kb_unavailable` | escalate | Knowledge down / circuit open (`degraded: true`) |
-| `uncalibrated_model` | escalate | no threshold configured for the index's embedding model |
+| `uncalibrated_index` | escalate | no threshold for the active index version (or, unless `THRESHOLD_STRICT=1`, its embedding model). Decisions record `threshold_key` (`index:<version>` or `model:<name>`) |
 | `daily_budget_exhausted` | escalate | daily token or cost ceiling reached |
 | `token_budget_exceeded` | escalate | prompt would exceed the per-query token budget |
 | `unsafe_output` | escalate | generated text matched an injection pattern |
