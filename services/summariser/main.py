@@ -35,6 +35,7 @@ from common import budget, guard
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
 from common.http import request_json
 from common.messaging import consume_forever
+from common.health import report as health_report
 from common.observability import EVENTS_CONSUMED, instrument
 from common.redact import redact
 
@@ -532,4 +533,4 @@ def reject(draft_id: str, body: RejectIn):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": SERVICE, "llm_mode": LLM_MODE}
+    return health_report(SERVICE, DB_PATH, consumes=("summariser.conversations",), extra={"llm_mode": LLM_MODE})

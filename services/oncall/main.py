@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
 from common.http import request_json
 from common.messaging import consume_forever
+from common.health import report as health_report
 from common.observability import EVENTS_CONSUMED, instrument
 
 logger = logging.getLogger("oncall")
@@ -418,7 +419,7 @@ def console_data():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": SERVICE}
+    return health_report(SERVICE, DB_PATH, consumes=("oncall.incident-lifecycle",))
 
 
 @app.get("/", include_in_schema=False)

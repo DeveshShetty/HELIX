@@ -33,6 +33,7 @@ ATTEMPT_HEADER = "x-helix-attempts"
 
 DEAD_LETTERED = Counter("dead_lettered_total", "Messages moved to the dead-letter queue", ["queue"])
 CONSUMER_RETRIES = Counter("consumer_retries_total", "Failed deliveries sent back for another attempt", ["queue"])
+CONSUMING: dict[str, bool] = {}     # queue -> currently consuming? (readiness, common/health.py)
 RABBIT_HOST = os.getenv("RABBIT_HOST", "localhost")
 RABBIT_PORT = int(os.getenv("RABBIT_PORT", "5672"))
 RABBIT_USER = os.getenv("RABBIT_USER", "guest")
@@ -176,8 +177,10 @@ def consume_forever(queue_name: str, routing_keys: list[str],
 
             channel.basic_consume(queue=queue_name, on_message_callback=callback)
             logger.info(f"[rabbit] consuming {queue_name} <- {routing_keys}")
+            CONSUMING[queue_name] = True
             channel.start_consuming()
         except Exception as exc:
+            CONSUMING[queue_name] = False
             failures += 1
             delay = retry.backoff(failures, base=1.0, cap=30.0)
             logger.warning(f"[rabbit] {queue_name} disconnected: {exc}; reconnect attempt {failures} in {delay:.1f}s")

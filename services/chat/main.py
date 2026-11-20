@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from common.circuit_breaker import CircuitOpenError
 from common.db import relay_forever, start_daemon
+from common.health import report as health_report
 from common.observability import instrument
 from common import budget, guard, log
 from services.chat import clients, llm
@@ -537,7 +538,8 @@ def config():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": SERVICE}
+    # Chat consumes no events; its own DB holds decisions, conversations and pending escalations
+    return health_report(SERVICE, DB_PATH)
 
 
 @app.get("/", include_in_schema=False)

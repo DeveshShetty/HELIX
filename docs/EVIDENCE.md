@@ -337,6 +337,57 @@ Limits:
 - Uvicorn's own access-log lines keep uvicorn's format, without the corr field.
 - Lines are key=value text, not JSON. There is no log shipping or search: `docker compose logs | grep`.
 
+## E15. Readiness, restart policy and resource limits (audit fix 5)
+
+`/health` now checks what each service needs (`common/health.py`) and returns 503, naming the
+failing check:
+- **chat, tickets:** their database. Tickets deliberately does not check the broker, because
+  it accepts work into its outbox while RabbitMQ is down.
+- **oncall, summariser:** their database plus their broker consumer.
+- **knowledge:** the seed and index now load in a background thread. `/health` returns 503
+  "starting" until an index is ACTIVE; after that it checks the database and the consumer.
+  The consumer starts only when the index is ready, and a failed load is retried with backoff.
+
+Compose: `restart: unless-stopped`, `mem_limit` and `cpus` on every container. The Python
+services get 256m and 0.5 CPU; they idle at 40–47 MiB (`docker stats`). Prometheus and Grafana
+get 256m and 0.5 CPU, RabbitMQ 1g and 2 CPUs.
+
+**Clean start** (2026-11-21, separate compose project `helixclean` with fresh volumes,
+`scripts/watch_startup.ps1`):
+
+```
+t+  19s  rabbitmq=up(health: starting), app services Created (waiting on service_healthy)
+t+  33s  rabbitmq=up(healthy); chat starting
+t+  36s  all five app services up(health: starting) | kb/health=no-connection
+t+  41s  … | kb/health=503        <- web server up, index still building
+t+  43s  … | kb/health=200
+t+  46s  chat, knowledge, oncall, summariser, tickets, rabbitmq all (healthy)
+```
+
+**Broker outage** (main stack):
+
+```
+oncall while RabbitMQ stopped: 503 {"status":"unavailable","checks":{"database":"ok",
+  "broker:oncall.incident-lifecycle":"disconnected"},"failing":["broker:oncall.incident-lifecycle"]}
+chat, tickets while RabbitMQ stopped: 200 {"checks":{"database":"ok"}}
+RabbitMQ healthy 177 s after `start`; oncall/knowledge/summariser back to 200 at 179.5 s
+  (about 2 s after the broker)
+```
+
+Two problems found while verifying, both fixed:
+1. RabbitMQ was first limited to 512m and 1 CPU. On restart it sat at 505/512 MiB and took
+   107 s to start, and its consumers stayed disconnected. Raised to 1g and 2 CPUs.
+2. On the first clean `up`, the app containers stayed "Created": RabbitMQ failed its
+   healthcheck while it was still booting, and `depends_on: service_healthy` gave up. Added
+   `start_period: 180s` to the RabbitMQ healthcheck; the run above is after that change.
+
+Not verified: behaviour when a container actually hits its memory limit (OOM kill, then
+restart). The limits were checked with `docker inspect` (chat: Memory=268435456,
+NanoCpus=500000000, RestartPolicy=unless-stopped). No OOM was forced.
+
+Note: RabbitMQ start time on this laptop varies a lot, from 11 s to 177 s. The broker-down
+recovery time in this report is dominated by it.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).

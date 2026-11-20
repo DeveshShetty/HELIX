@@ -30,7 +30,8 @@ from fastapi.responses import FileResponse
 from prometheus_client import Counter, Gauge
 from pydantic import BaseModel, Field
 
-from common import budget
+from common import budget, retry
+from common.health import report as health_report
 from common.db import OUTBOX_DDL, already_processed, connect, mark_processed, start_daemon
 from common.messaging import consume_forever
 from common.observability import EVENTS_CONSUMED, instrument
@@ -434,9 +435,33 @@ def handle_incident_event(event: dict) -> None:
     logger.info(f"[ingest] {ticket_id} resolved (rev {revision}): {outcome}")
 
 
-load_seed()
-start_daemon(consume_forever, "knowledge.incident-lifecycle", ["incident.resolved", "incident.reopened"],
-             handle_incident_event, name="knowledge-incident-consumer")
+# Startup runs in the background so the web server answers at once: /health says 503
+# "starting" until the seed is loaded and an index is ACTIVE, and only then does the
+# consumer start (an incident event needs the index). A failed load is retried with backoff.
+_startup = {"ready": False, "attempts": 0, "error": None}
+
+
+def _start() -> None:
+    while True:
+        _startup["attempts"] += 1
+        try:
+            load_seed()
+            break
+        except Exception as exc:                          # noqa: BLE001
+            _startup["error"] = repr(exc)[:200]
+            delay = retry.backoff(_startup["attempts"], 1.0, 30.0)
+            logger.error(f"[startup] seed/index load failed ({exc!r}); retry in {delay:.1f}s")
+            time.sleep(delay)
+    _startup.update(ready=True, error=None)
+    logger.info("[startup] ready")
+    consume_forever("knowledge.incident-lifecycle", ["incident.resolved", "incident.reopened"],
+                    handle_incident_event)
+
+
+_schema = connect(DB_PATH)                                 # tables exist before any request
+_schema.executescript(DDL + OUTBOX_DDL)
+_schema.close()
+start_daemon(_start, name="knowledge-startup")
 
 
 # ---------------------------------------------------------------- API
@@ -571,5 +596,7 @@ def set_fault(body: FaultIn):
 
 @app.get("/health")
 def health():
-    return {"status": "ok" if _cache["version"] else "starting", "service": SERVICE,
-            "index_version": _cache["version"], "chunks": len(_cache["chunks"])}
+    ready = _startup["ready"] and _cache["version"] is not None
+    return health_report(SERVICE, DB_PATH, consumes=("knowledge.incident-lifecycle",) if ready else (),
+                         ready=ready, not_ready_reason=_startup["error"] or "loading seed and index",
+                         extra={"index_version": _cache["version"], "chunks": len(_cache["chunks"])})

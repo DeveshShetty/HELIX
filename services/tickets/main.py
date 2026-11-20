@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field
 
 from common.db import OUTBOX_DDL, connect, enqueue, outbox_backlog, relay_forever, start_daemon
 from common.messaging import new_event
+from common.health import report as health_report
 from common.observability import instrument
 
 logger = logging.getLogger("tickets")
@@ -285,4 +286,5 @@ def outbox_status():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": SERVICE}
+    # The broker is NOT a readiness dependency: tickets are accepted into the outbox while it is down
+    return health_report(SERVICE, DB_PATH)

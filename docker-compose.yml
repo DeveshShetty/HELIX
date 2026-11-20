@@ -15,8 +15,18 @@ x-depends-rabbit: &depends-rabbit
   rabbitmq:
     condition: service_healthy
 
+# restart policy + resource limits for every container (sized from `docker stats`: the
+# Python services idle at ~40-47 MiB, RabbitMQ ~150 MiB, Grafana ~120 MiB)
+x-app: &app
+  restart: unless-stopped
+  mem_limit: 256m
+  cpus: 0.5
+
 services:
   rabbitmq:
+    restart: unless-stopped
+    mem_limit: 1g        # 512m was too small: RabbitMQ hit 505/512 MiB on restart and took 107 s to start
+    cpus: 2.0
     image: rabbitmq:4-management
     hostname: rabbitmq   # stable node name so the data volume survives restarts
     ports: ["5672:5672", "15672:15672"]   # UI: http://localhost:15672 (guest/guest)
@@ -26,8 +36,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+      start_period: 180s   # first boot on a small laptop takes 1-3 min; failures here don't count
 
   chat:
+    <<: *app
     build: { context: ., dockerfile: services/chat/Dockerfile }
     environment:
       <<: *service-env
@@ -47,6 +59,7 @@ services:
     depends_on: *depends-rabbit
 
   tickets:
+    <<: *app
     build: { context: ., dockerfile: services/tickets/Dockerfile }
     environment:
       <<: *service-env
@@ -56,6 +69,7 @@ services:
     depends_on: *depends-rabbit
 
   oncall:
+    <<: *app
     build: { context: ., dockerfile: services/oncall/Dockerfile }
     environment:
       <<: *service-env
@@ -69,6 +83,7 @@ services:
     depends_on: *depends-rabbit
 
   knowledge:
+    <<: *app
     build: { context: ., dockerfile: services/knowledge/Dockerfile }
     environment:
       <<: *service-env
@@ -78,6 +93,7 @@ services:
     depends_on: *depends-rabbit
 
   summariser:
+    <<: *app
     build: { context: ., dockerfile: services/summariser/Dockerfile }
     environment:
       <<: *service-env
@@ -92,6 +108,7 @@ services:
     depends_on: *depends-rabbit
 
   prometheus:
+    <<: *app
     image: prom/prometheus:v3.1.0
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -99,6 +116,7 @@ services:
     ports: ["9090:9090"]
 
   grafana:
+    <<: *app
     image: grafana/grafana:11.4.0
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"

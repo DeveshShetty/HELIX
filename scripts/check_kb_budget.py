@@ -12,7 +12,11 @@ import os
 assert os.environ.get("DB_PATH", "").startswith("/tmp/"), "run with DB_PATH=/tmp/... (never the live DB)"
 
 from common import budget                       # noqa: E402
-from services.knowledge import main as kb       # noqa: E402  (imports load the seed into /tmp)
+from services.knowledge import main as kb       # noqa: E402  (loads the seed into /tmp in the background)
+import time                                      # noqa: E402
+
+while not kb._startup["ready"]:                  # startup is asynchronous since audit fix 5
+    time.sleep(0.2)
 
 
 class PaidStandIn:
