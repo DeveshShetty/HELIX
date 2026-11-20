@@ -44,6 +44,13 @@ Stop: `docker compose down` · wipe all data: `docker compose down -v`
 7. Break things: `python scripts/demo.py kb-down` (see [docs/RUNBOOK.md](docs/RUNBOOK.md)).
 8. Calibrate: `python eval/run_eval.py` and `python eval/flip_test.py`.
 
+## Tests
+
+`make test` (or on Windows `powershell -File scripts/test.ps1`) runs the pytest suite in
+`tests/` inside `python:3.12-slim`, so nothing needs installing locally. It covers
+idempotency keys, the transactional outbox, duplicate and out-of-order events, the
+dead-letter queue, the circuit breaker, retry limits and summary grounding.
+
 ## Architecture
 
 ```

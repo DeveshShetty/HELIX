@@ -388,6 +388,61 @@ NanoCpus=500000000, RestartPolicy=unless-stopped). No OOM was forced.
 Note: RabbitMQ start time on this laptop varies a lot, from 11 s to 177 s. The broker-down
 recovery time in this report is dominated by it.
 
+## E16. Minimal pytest suite (audit fix 6)
+
+`tests/` has 20 tests. Run them with `make test`, or on Windows `powershell -File scripts/test.ps1`.
+They run inside `python:3.12-slim` with `requirements.txt` plus pytest 8.3.4. Each service
+imported by a test gets its own throw-away SQLite file, and the broker address points at a
+closed port, so no test touches the running stack.
+
+Run on 2026-11-21:
+
+```
+tests/test_knowledge_consumer.py::test_duplicate_event_is_ignored PASSED
+tests/test_knowledge_consumer.py::test_older_revision_is_ignored PASSED
+tests/test_knowledge_consumer.py::test_reopen_tombstone_blocks_late_resolution PASSED
+tests/test_knowledge_consumer.py::test_malformed_resolution_raises_so_it_can_be_dead_lettered PASSED
+tests/test_messaging_and_retry.py::test_poison_message_is_dead_lettered_after_max_attempts PASSED
+tests/test_messaging_and_retry.py::test_failing_outbox_event_does_not_block_later_ones_and_is_parked PASSED
+tests/test_messaging_and_retry.py::test_broker_outage_does_not_charge_events PASSED
+tests/test_messaging_and_retry.py::test_circuit_breaker_opens_then_closes_after_successful_probe PASSED
+tests/test_messaging_and_retry.py::test_failed_probe_reopens_the_circuit PASSED
+tests/test_messaging_and_retry.py::test_retry_stops_at_max_attempts_and_backoff_has_jitter PASSED
+tests/test_messaging_and_retry.py::test_retry_does_not_retry_non_retryable_errors PASSED
+tests/test_summariser_grounding.py::test_ungrounded_ai_draft_is_rejected PASSED
+tests/test_summariser_grounding.py::test_grounded_ai_draft_is_used PASSED
+tests/test_summariser_grounding.py::test_invented_cause_is_replaced PASSED
+tests/test_summariser_grounding.py::test_budget_exhausted_degrades_to_rule_based PASSED
+tests/test_tickets.py::test_same_idempotency_key_creates_one_ticket PASSED
+tests/test_tickets.py::test_different_keys_create_different_tickets PASSED
+tests/test_tickets.py::test_missing_idempotency_key_is_rejected PASSED
+tests/test_tickets.py::test_outbox_event_written_in_same_transaction PASSED
+tests/test_tickets.py::test_ticket_rolled_back_when_outbox_write_fails PASSED
+============================== 20 passed in 5.00s ==============================
+```
+
+What the requested items map to:
+
+| Required | Test(s) |
+|---|---|
+| Ticket idempotency key | `test_same_idempotency_key_creates_one_ticket`, `…different_keys…`, `…missing…` |
+| Outbox in the same transaction | `test_outbox_event_written_in_same_transaction`, `test_ticket_rolled_back_when_outbox_write_fails` (a failing outbox write leaves no ticket, and the key is not used up) |
+| Consumer dedupe | `test_duplicate_event_is_ignored` |
+| Revision ordering | `test_older_revision_is_ignored`, `test_reopen_tombstone_blocks_late_resolution` |
+| Circuit breaker open/close | `test_circuit_breaker_opens_then_closes_after_successful_probe`, `test_failed_probe_reopens_the_circuit` |
+| DLQ after N failures | `test_poison_message_is_dead_lettered_after_max_attempts` (also checks the header is an integer: the E11 bug) |
+| Summariser grounding | `test_ungrounded_ai_draft_is_rejected` (+ grounded draft used, invented cause replaced, budget cap) |
+
+Extra: the outbox no longer blocks and parks failing events (E12 behaviour), a broker outage
+is not charged to events, and the retry helper honours its max attempts and jitter.
+
+Mutation check: with the grounding check turned off (`SUMMARY_GROUNDING_MIN=0`),
+`test_ungrounded_ai_draft_is_rejected` FAILS (`1 failed, 3 passed`). So the test catches a real
+regression.
+
+Not covered: the HTTP layer of chat and on-call, the escalation ladder timer, and anything
+needing a real RabbitMQ or Ollama. Those are covered only by the demo scripts (E1–E15).
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).
