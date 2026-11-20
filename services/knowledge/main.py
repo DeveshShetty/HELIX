@@ -390,12 +390,15 @@ def handle_incident_event(event: dict) -> None:
     resolution, n2 = redact(data["resolution"])
     if n1 + n2:
         print(f"[ingest] {ticket_id}: removed {n1 + n2} personal detail(s) before indexing", flush=True)
+    # Approved summaries are help-centre articles ("Symptoms / Cause / Steps") with a generic
+    # title; older free-text resolutions keep the Problem/Resolution layout.
+    article = resolution.lstrip().lower().startswith(("symptoms:", "question:"))
     doc = {
         "doc_id": f"inc-{ticket_id}",
-        "title": f"{ticket_id}: {summary}"[:200],
+        "title": summary[:200] if article else f"{ticket_id}: {summary}"[:200],
         "source_type": "incident",
-        "tags": "resolved incident",
-        "text": f"Problem: {summary}\n\nResolution: {resolution}",
+        "tags": f"resolved incident {ticket_id}",
+        "text": resolution if article else f"Problem: {summary}\n\nResolution: {resolution}",
         "author": data.get("resolved_by", "on-call"),
     }
     outcome = index_document(doc, "incident", event_id=event["event_id"], ticket_revision=(ticket_id, revision))

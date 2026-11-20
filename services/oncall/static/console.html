@@ -59,7 +59,7 @@
   .sumhead { font-weight: 700; font-size: 15px; }
   .sumitem { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
   .sumitem .top { font-size: 12px; color: var(--muted); }
-  .sumitem textarea { min-height: 70px; }
+  .sumitem textarea.article { min-height: 170px; font-family: inherit; }
   .checks { display: flex; flex-wrap: wrap; gap: 6px; }
   .chk { font-size: 12px; border-radius: 6px; padding: 2px 8px; }
   .chk.ok { color: var(--ok); background: var(--ok-bg); }
@@ -273,11 +273,11 @@ function renderSummaries(list) {
     item.append(el('div', 'top', `${s.draft_id} · ${s.ticket_id || 'no ticket'} · chat with ${s.agent_id || '?'} · drafted by ${s.method}`));
     const checks = el('div', 'checks');
     for (const c of s.checks) checks.append(el('span', 'chk ' + (c.ok ? 'ok' : 'bad'), (c.ok ? '✔ ' : '✖ ') + c.check.replace('_', ' ') + ': ' + c.detail));
-    const summary = el('input'); summary.value = e.summary; summary.placeholder = 'Problem summary';
-    const resolution = el('textarea'); resolution.value = e.resolution; resolution.placeholder = 'Fix (what the customer should do)';
-    const fromLabel = el('div', 'hint', s.method.startsWith('extractive')
-      ? 'Below: the customer’s question and the agent’s own words (the AI’s version was not used).'
-      : 'Below: the AI’s summary, checked against the agent’s words.');
+    const summary = el('input'); summary.value = e.summary; summary.placeholder = 'Article title (generic, e.g. "Location and file upload not working in the iOS app")';
+    const resolution = el('textarea'); resolution.className = 'article'; resolution.value = e.resolution; resolution.placeholder = 'Symptoms: ...\n\nCause: ...\n\nSteps:\n1. ...';
+    const fromLabel = el('div', 'hint', s.method.startsWith('rule-based') || s.method.startsWith('extractive')
+      ? 'Below: an article built by rules from the chat (generic title, the agent’s advice as steps). Check the wording.'
+      : 'Below: the AI’s article; its steps were checked against what the agent said.');
     let alt = null;
     if (s.llm_draft) {
       alt = el('div', 'altdraft');
