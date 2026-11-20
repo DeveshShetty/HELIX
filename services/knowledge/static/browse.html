@@ -54,6 +54,7 @@
   .learned { font-size: 11px; font-weight: 700; color: var(--learned); }
   .body { padding: 0 14px 12px; white-space: pre-wrap; border-top: 1px solid var(--line); padding-top: 10px; }
   .meta { color: var(--muted); font-size: 12px; padding: 0 14px 12px; }
+  details.linked { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); scroll-margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -87,6 +88,7 @@ function render() {
   list.replaceChildren();
   for (const d of shown) {
     const det = el('details'), sum = el('summary');
+    det.id = d.doc_id;                        // lets the chat link to an article: /#rb-payments-502
     sum.append(el('span', 'kind k-' + d.source_type, d.source_type), el('span', 't', d.title));
     if (d.origin === 'incident') sum.append(el('span', 'learned', 'learned · by ' + d.author));
     det.append(sum, el('div', 'body', d.text),
@@ -95,7 +97,16 @@ function render() {
   }
   document.getElementById('count').textContent = `${shown.length} of ${docs.length} articles`;
 }
-fetch('/documents').then(r => r.json()).then(d => { docs = d; render(); });
+function openLinked() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const target = id && document.getElementById(id);
+  if (!target) return;
+  target.open = true;
+  target.classList.add('linked');
+  target.scrollIntoView({ block: 'start' });
+}
+fetch('/documents').then(r => r.json()).then(d => { docs = d; render(); openLinked(); });
+window.addEventListener('hashchange', openLinked);
 q.oninput = kind.onchange = render;
 </script>
 <script>

@@ -47,6 +47,7 @@
   .chain b { color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-weight: 600; }
   .warn-note { color: var(--warn); background: var(--warn-bg); padding: 6px 10px; border-radius: 8px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  #list { display: flex; flex-direction: column; gap: 10px; }
   .top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .tid { font-weight: 700; }
   .title { flex: 1; min-width: 200px; }
@@ -57,6 +58,23 @@
   .pages { margin-top: 8px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
   .pages .live { color: var(--ink); font-weight: 600; }
   .pages .late { color: var(--bad); }
+  /* the page waiting for an ack, with a countdown that shrinks to the escalation */
+  .paging { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--ink); font-weight: 600; }
+  .countdown { flex: 1; min-width: 140px; max-width: 280px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .countdown i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width 2s linear; }
+  .paging.late .countdown i { background: var(--bad); }
+  .paging.late .left { color: var(--bad); }
+  .left { font-weight: 400; font-size: 12px; color: var(--muted); }
+  /* status tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tab { font: inherit; font-weight: 600; font-size: 13px; padding: 8px 12px; border: 0; border-bottom: 2px solid transparent;
+         border-radius: 0; background: none; color: var(--muted); cursor: pointer; margin-bottom: -1px; }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab .n { display: inline-block; min-width: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 11px;
+            background: var(--sunken); color: var(--muted); border: 1px solid var(--line); }
+  .tab[aria-selected="true"] .n { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  @media (max-width: 600px) { main { padding: 12px; } header { padding: 10px 12px; } }
   .actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
   button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
   button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -104,6 +122,7 @@
 </header>
 <main>
   <div class="bar" id="bar"></div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Filter incidents"></nav>
   <div id="list"><div class="empty">Loading…</div></div>
 </main>
 
@@ -215,15 +234,32 @@ function renderTicket(t, now) {
 
   const pages = el('div', 'pages');
   const live = (t.pages || []).find(p => p.status === 'PENDING');
-  for (const p of (t.pages || []).slice().reverse()) {
-    let line = `Page ${p.page_id} → ${p.responder_id} (level ${p.level}): ${p.status.toLowerCase().replace('_', ' ')}`;
-    let cls = '';
-    if (p.status === 'PENDING') {
-      const left = p.deadline - now;
-      line += left > 0 ? ` · escalates in ${ago(left)}` : ' · escalating…';
-      cls = left < 10 ? 'live late' : 'live';
+  const history = (t.pages || []).slice().reverse();          // oldest first
+  if (live) {
+    const left = Math.max(0, live.deadline - now);
+    const row = el('div', 'paging' + (left < 10 ? ' late' : ''));
+    const bar = el('span', 'countdown'); const fill = el('i');
+    fill.style.width = Math.min(100, (left / ackTimeout) * 100) + '%';
+    bar.append(fill);
+    bar.setAttribute('role', 'progressbar');
+    bar.setAttribute('aria-label', 'Time until this page escalates');
+    bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', String(ackTimeout));
+    bar.setAttribute('aria-valuenow', String(Math.round(left)));
+    row.append(el('span', null, `Paging ${live.responder_id} (level ${live.level})`), bar,
+               el('span', 'left', left > 0 ? `escalates in ${ago(left)}` : 'escalating now'));
+    pages.append(row);
+  }
+  if (history.length) {
+    // "alice → bob → carol ×3": consecutive pages to the same person are counted, not repeated
+    const runs = [];
+    for (const p of history) {
+      const lastRun = runs[runs.length - 1];
+      if (lastRun && lastRun.who === p.responder_id) lastRun.n++;
+      else runs.push({ who: p.responder_id, n: 1 });
     }
-    pages.append(el('div', cls, line));
+    const acked = history.find(p => p.status === 'ACKED');
+    const trail = runs.map(r => r.n > 1 ? `${r.who} ×${r.n}` : r.who).join(' → ');
+    pages.append(el('div', null, `Escalation so far: ${trail}` + (acked ? ` (acked by ${acked.responder_id})` : '')));
   }
   if (t.status === 'RESOLVED' && t.resolution) pages.append(el('div', null, 'Resolution: ' + t.resolution));
   if (pages.childNodes.length) card.append(pages);
@@ -342,6 +378,38 @@ function renderSummaries(list) {
   return box;
 }
 
+// ---------------------------------------------------------------- status tabs
+let ackTimeout = 30;
+const TABS = {
+  open:     { label: 'Needs action', match: t => t.status === 'OPEN',     empty: 'Nothing needs action right now.' },
+  acked:    { label: 'In progress',  match: t => t.status === 'ACKED',    empty: 'No incidents in progress.' },
+  resolved: { label: 'Resolved',     match: t => t.status === 'RESOLVED', empty: 'No resolved incidents yet.' },
+  all:      { label: 'All',          match: () => true,                   empty: 'No incidents yet.' },
+};
+let tab = localStorage.getItem('helix-console-tab') || 'open';
+if (!TABS[tab]) tab = 'open';
+
+function rank(t) {
+  if (t.live_chat && t.live_chat.status === 'WAITING_AGENT') return 0;
+  if (t.live_chat) return 1;
+  if ((t.pages || []).some(p => p.status === 'PENDING')) return 2;
+  return 3;
+}
+
+function renderTabs(tickets) {
+  const nav = document.getElementById('tabs');
+  nav.replaceChildren();
+  for (const [key, def] of Object.entries(TABS)) {
+    const b = el('button', 'tab', def.label);
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', String(key === tab));
+    b.append(el('span', 'n', String(tickets.filter(def.match).length)));
+    b.onclick = () => { tab = key; localStorage.setItem('helix-console-tab', key); refresh(true); };
+    nav.append(b);
+  }
+}
+
 async function refresh(force) {
   // don't redraw while typing (open chat panels update their own message list in place)
   if (!force && document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
@@ -358,8 +426,15 @@ async function refresh(force) {
     list.replaceChildren();
     if (d.summaries === null) list.append(el('div', 'warn-note', 'Summariser service unreachable: summaries will appear when it is back.'));
     else if (d.summaries.length) list.append(renderSummaries(d.summaries));
-    if (!d.tickets.length) list.append(el('div', 'empty', 'No incidents. When the chat assistant escalates a question, it appears here.'));
-    for (const t of d.tickets) list.append(renderTicket(t, d.now));
+    ackTimeout = d.ack_timeout_seconds || 30;
+    renderTabs(d.tickets);
+    const shown = d.tickets
+      .filter(t => TABS[tab].match(t))
+      // a customer waiting in live chat comes first, then anything being paged, then newest
+      .sort((a, b) => rank(a) - rank(b));
+    if (!d.tickets.length) list.append(el('div', 'empty', 'No incidents yet. When the chat assistant escalates a question, it appears here.'));
+    else if (!shown.length) list.append(el('div', 'empty', TABS[tab].empty));
+    for (const t of shown) list.append(renderTicket(t, d.now));
   } catch (e) {
     list.replaceChildren(el('div', 'empty', 'On-call service unreachable: ' + e.message));
   }
