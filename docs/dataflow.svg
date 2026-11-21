@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2b3634"/>
+    </marker>
+    <marker id="e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f7c74"/>
+    </marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a9795"/>
+    </marker>
+    <style>
+      .ent { fill: #ffffff; stroke: #17201f; stroke-width: 1.8; }
+      .ext { fill: #f7f9f8; stroke: #8a9795; stroke-width: 1.5; stroke-dasharray: 6 4; }
+      .proc { fill: #ffffff; stroke: #0f7c74; stroke-width: 2; }
+      .pband { fill: #e4f2f0; stroke: none; }
+      .store { fill: #ffffff; stroke: #5d6b69; stroke-width: 1.5; }
+      .sid { fill: #eef3f2; stroke: #5d6b69; stroke-width: 1.5; }
+      .queue { fill: #fdf5e6; stroke: #9a5b00; stroke-width: 1.5; }
+      .qid { fill: #f6e6c6; stroke: #9a5b00; stroke-width: 1.5; }
+      .pnum { font-size: 13px; font-weight: 700; fill: #0f7c74; }
+      .pname { font-size: 16px; font-weight: 700; fill: #17201f; }
+      .psub { font-size: 12px; fill: #5d6b69; }
+      .ename { font-size: 15px; font-weight: 700; fill: #17201f; }
+      .sname { font-size: 13px; fill: #17201f; }
+      .sidt { font-size: 13px; font-weight: 700; fill: #3d4a48; }
+      .flow { stroke: #2b3634; stroke-width: 1.5; fill: none; marker-end: url(#a); }
+      .evt { stroke: #0f7c74; stroke-width: 1.7; fill: none; stroke-dasharray: 7 4; marker-end: url(#e); }
+      .opt { stroke: #8a9795; stroke-width: 1.4; fill: none; stroke-dasharray: 2 4; marker-end: url(#o); }
+      .two { marker-start: url(#a); }
+      .l { font-size: 12px; fill: #2b3634; }
+      .le { font-size: 12px; fill: #0f7c74; font-weight: 600; }
+      .lo { font-size: 12px; fill: #6b7775; }
+      .pii { font-size: 11.5px; fill: #9a5b00; font-weight: 600; }
+      .title { font-size: 22px; font-weight: 700; fill: #17201f; }
+      .sub { font-size: 13px; fill: #5d6b69; }
+      .legend { font-size: 12.5px; fill: #3d4a48; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1060" fill="#f3f5f4"/>
+  <text x="40" y="36" class="title">HELIX: data flow diagram (level 1)</text>
+  <text x="40" y="57" class="sub">What data moves between the customer, the engineer, the five processes and where it is stored. Arrows are labelled with the data, not the call.</text>
+
+  <!-- ============ external entities ============ -->
+  <rect x="140" y="80" width="200" height="40" class="ent"/>
+  <text x="240" y="105" class="ename" text-anchor="middle">Customer</text>
+  <rect x="1260" y="80" width="200" height="40" class="ent"/>
+  <text x="1360" y="105" class="ename" text-anchor="middle">On-call engineer</text>
+  <rect x="660" y="790" width="290" height="70" class="ext"/>
+  <text x="805" y="818" class="ename" text-anchor="middle" fill="#3d4a48">Ollama (optional, local)</text>
+  <text x="805" y="840" class="psub" text-anchor="middle">LLM text and embeddings; 1.0 also uses it</text>
+
+  <!-- ============ processes ============ -->
+  <g>
+    <rect x="120" y="240" width="270" height="110" rx="12" class="proc"/>
+    <path d="M132,240 H378 Q390,240 390,252 V268 H120 V252 Q120,240 132,240 z" class="pband"/>
+    <text x="134" y="259" class="pnum">1.0</text>
+    <text x="134" y="294" class="pname">Answer question</text>
+    <text x="134" y="314" class="psub">Chat / RAG service</text>
+    <text x="134" y="332" class="psub">decide: answer, escalate or refuse</text>
+  </g>
+  <g>
+    <rect x="665" y="240" width="270" height="110" rx="12" class="proc"/>
+    <path d="M677,240 H923 Q935,240 935,252 V268 H665 V252 Q665,240 677,240 z" class="pband"/>
+    <text x="679" y="259" class="pnum">2.0</text>
+    <text x="679" y="294" class="pname">Manage incidents</text>
+    <text x="679" y="314" class="psub">Ticket service</text>
+    <text x="679" y="332" class="psub">record state, emit lifecycle events</text>
+  </g>
+  <g>
+    <rect x="1210" y="240" width="270" height="110" rx="12" class="proc"/>
+    <path d="M1222,240 H1468 Q1480,240 1480,252 V268 H1210 V252 Q1210,240 1222,240 z" class="pband"/>
+    <text x="1224" y="259" class="pnum">3.0</text>
+    <text x="1224" y="294" class="pname">Page and escalate</text>
+    <text x="1224" y="314" class="psub">On-Call service and console</text>
+    <text x="1224" y="332" class="psub">roster, ack timers, live chat, approvals</text>
+  </g>
+  <g>
+    <rect x="120" y="690" width="270" height="110" rx="12" class="proc"/>
+    <path d="M132,690 H378 Q390,690 390,702 V718 H120 V702 Q120,690 132,690 z" class="pband"/>
+    <text x="134" y="709" class="pnum">4.0</text>
+    <text x="134" y="744" class="pname">Search and learn</text>
+    <text x="134" y="764" class="psub">Knowledge Base service</text>
+    <text x="134" y="782" class="psub">retrieve, index, withdraw articles</text>
+  </g>
+  <g>
+    <rect x="1210" y="690" width="270" height="110" rx="12" class="proc"/>
+    <path d="M1222,690 H1468 Q1480,690 1480,702 V718 H1210 V702 Q1210,690 1222,690 z" class="pband"/>
+    <text x="1224" y="709" class="pnum">5.0</text>
+    <text x="1224" y="744" class="pname">Draft summaries</text>
+    <text x="1224" y="764" class="psub">Summariser service</text>
+    <text x="1224" y="782" class="psub">chat transcript to checked article draft</text>
+  </g>
+
+  <!-- ============ data stores ============ -->
+  <!-- D1 chat -->
+  <path d="M40,420 H270 M40,460 H270" class="store"/><rect x="40" y="420" width="44" height="40" class="sid"/>
+  <text x="62" y="445" class="sidt" text-anchor="middle">D1</text>
+  <text x="94" y="438" class="sname">Chat DB: decisions,</text>
+  <text x="94" y="454" class="sname">conversations, outboxes</text>
+  <!-- D2 tickets -->
+  <path d="M670,140 H930 M670,180 H930" class="store"/><rect x="670" y="140" width="44" height="40" class="sid"/>
+  <text x="692" y="165" class="sidt" text-anchor="middle">D2</text>
+  <text x="724" y="158" class="sname">Tickets DB: tickets, revisions,</text>
+  <text x="724" y="174" class="sname">idempotency keys, outbox</text>
+  <!-- D3 on-call -->
+  <path d="M1270,420 H1440 M1270,460 H1440" class="store"/><rect x="1270" y="420" width="44" height="40" class="sid"/>
+  <text x="1292" y="445" class="sidt" text-anchor="middle">D3</text>
+  <text x="1324" y="438" class="sname">On-Call DB: roster,</text>
+  <text x="1324" y="454" class="sname">pages + deadlines</text>
+  <!-- D4 knowledge -->
+  <path d="M110,880 H400 M110,920 H400" class="store"/><rect x="110" y="880" width="44" height="40" class="sid"/>
+  <text x="132" y="905" class="sidt" text-anchor="middle">D4</text>
+  <text x="164" y="898" class="sname">Knowledge DB: articles, vectors</text>
+  <text x="164" y="914" class="sname">stamped with index version</text>
+  <!-- D5 summariser -->
+  <path d="M1200,880 H1480 M1200,920 H1480" class="store"/><rect x="1200" y="880" width="44" height="40" class="sid"/>
+  <text x="1222" y="905" class="sidt" text-anchor="middle">D5</text>
+  <text x="1254" y="898" class="sname">Summariser DB: drafts, checks,</text>
+  <text x="1254" y="914" class="sname">transcripts, decisions</text>
+  <!-- D6 queues -->
+  <path d="M640,520 H960 M640,570 H960" class="queue"/><rect x="640" y="520" width="44" height="50" class="qid"/>
+  <rect x="684" y="521" width="276" height="48" fill="#fdf5e6"/>
+  <text x="662" y="550" class="sidt" text-anchor="middle" fill="#6b4000">D6</text>
+  <text x="694" y="541" class="sname">RabbitMQ durable queues</text>
+  <text x="694" y="559" class="sname">(events waiting for consumers)</text>
+  <!-- D7 seed -->
+  <path d="M40,600 H270 M40,640 H270" class="store"/><rect x="40" y="600" width="44" height="40" class="sid"/>
+  <text x="62" y="625" class="sidt" text-anchor="middle">D7</text>
+  <text x="94" y="618" class="sname">Seed articles (39 files:</text>
+  <text x="94" y="634" class="sname">runbooks, FAQs, incidents)</text>
+
+  <!-- ============ flows ============ -->
+  <!-- customer <-> 1.0 -->
+  <path d="M215,120 V238" class="flow"/>
+  <text x="208" y="168" class="l" text-anchor="end">question,</text>
+  <text x="208" y="183" class="l" text-anchor="end">messages to agent</text>
+  <path d="M290,238 V122" class="flow"/>
+  <text x="298" y="146" class="l">answer + source, reference no.,</text>
+  <text x="298" y="161" class="l">agent replies</text>
+
+  <!-- 3.0 -> 1.0 agent messages (over the top) -->
+  <path d="M1250,240 V208 H350 V238" class="flow"/>
+  <text x="560" y="201" class="l">agent's live chat messages, end of chat</text>
+
+  <!-- 1.0 <-> D1 -->
+  <path d="M150,350 V418" class="flow two"/>
+  <text x="158" y="392" class="l">decision record,</text>
+  <text x="158" y="407" class="l">transcript</text>
+
+  <!-- 1.0 <-> 4.0 -->
+  <path d="M282,350 V688" class="flow"/>
+  <text x="274" y="520" class="l" text-anchor="end">search</text>
+  <text x="274" y="535" class="l" text-anchor="end">query</text>
+  <path d="M322,688 V352" class="flow"/>
+  <text x="330" y="600" class="l">passages, scores,</text>
+  <text x="330" y="615" class="l">index version</text>
+
+  <!-- 1.0 -> 2.0 / 2.0 -> 1.0 -->
+  <path d="M390,272 H663" class="flow"/>
+  <text x="400" y="264" class="l">escalation: question, confidence,</text>
+  <text x="400" y="288" class="l">retrieved doc ids</text>
+  <path d="M663,322 H392" class="flow"/>
+  <text x="655" y="315" class="l" text-anchor="end">ticket id</text>
+
+  <!-- 2.0 <-> D2 -->
+  <path d="M800,238 V182" class="flow two"/>
+  <text x="808" y="224" class="l">ticket state + event (one transaction)</text>
+
+  <!-- 3.0 -> 2.0 -->
+  <path d="M1208,272 H937" class="flow"/>
+  <text x="1198" y="264" class="l" text-anchor="end">ack / resolve / reopen</text>
+
+  <!-- engineer <-> 3.0 -->
+  <path d="M1320,120 V238" class="flow"/>
+  <text x="1312" y="168" class="l" text-anchor="end">ack, chat replies,</text>
+  <text x="1312" y="183" class="l" text-anchor="end">approve / edit / reject</text>
+  <path d="M1420,238 V122" class="flow"/>
+  <text x="1428" y="146" class="l">pages, live chats,</text>
+  <text x="1428" y="161" class="l">transcripts, drafts</text>
+
+  <!-- 3.0 <-> D3 -->
+  <path d="M1350,350 V418" class="flow two"/>
+  <text x="1358" y="388" class="l">roster,</text>
+  <text x="1358" y="403" class="l">page deadlines</text>
+
+  <!-- 2.0 -> D6 -->
+  <path d="M800,350 V518" class="evt"/>
+  <text x="808" y="420" class="le">incident.opened / acked /</text>
+  <text x="808" y="436" class="le">resolved / reopened</text>
+  <text x="808" y="452" class="pii">resolved: staff-written</text>
+  <text x="808" y="467" class="pii">text only</text>
+
+  <!-- 1.0 -> D6 -->
+  <path d="M362,350 V545 H638" class="evt"/>
+  <text x="372" y="565" class="le">conversation.closed</text>
+  <text x="372" y="581" class="lo" fill="#0f7c74">(transcript)</text>
+
+  <!-- D6 -> 3.0 -->
+  <path d="M960,532 H1240 V352" class="evt"/>
+  <text x="1010" y="524" class="le">incident events: page, cancel, re-page</text>
+
+  <!-- D6 -> 5.0 -->
+  <path d="M960,560 H1300 V688" class="evt"/>
+  <text x="1010" y="580" class="le">transcript</text>
+
+  <!-- D6 -> 4.0 -->
+  <path d="M640,562 H520 V745 H392" class="evt"/>
+  <text x="528" y="640" class="le">approved article /</text>
+  <text x="528" y="656" class="le">withdraw on reopen</text>
+
+  <!-- 5.0 -> 2.0 resolve -->
+  <path d="M1208,745 H1000 V300 H937" class="flow"/>
+  <text x="1010" y="650" class="l">approved article</text>
+  <text x="1010" y="665" class="l">(resolves the ticket)</text>
+
+  <!-- 3.0 <-> 5.0 -->
+  <path d="M1460,352 V688" class="flow two"/>
+  <text x="1452" y="600" class="l" text-anchor="end">drafts ⇄</text>
+  <text x="1452" y="615" class="l" text-anchor="end">decisions</text>
+
+  <!-- 4.0 <-> D4, D7 -> 4.0 -->
+  <path d="M255,800 V878" class="flow two"/>
+  <text x="263" y="845" class="l">articles, vectors</text>
+  <text x="263" y="860" class="pii">personal data removed</text>
+  <path d="M150,640 V688" class="flow"/>
+  <text x="158" y="668" class="l">loaded at start</text>
+
+  <!-- 5.0 <-> D5 -->
+  <path d="M1340,800 V878" class="flow two"/>
+  <text x="1348" y="845" class="l">drafts + check results</text>
+  <text x="1348" y="860" class="pii">personal data removed</text>
+
+  <!-- Ollama -->
+  <path d="M392,815 H658" class="opt two"/>
+  <text x="402" y="808" class="lo">text ⇄ embedding (v2 index)</text>
+  <path d="M1208,815 H952" class="opt two"/>
+  <text x="1198" y="808" class="lo" text-anchor="end">transcript ⇄ draft</text>
+
+  <!-- legend -->
+  <g transform="translate(40,970)">
+    <rect width="1520" height="64" rx="10" fill="#ffffff" stroke="#dbe2e0"/>
+    <rect x="18" y="20" width="44" height="24" class="ent"/><text x="72" y="37" class="legend">external entity</text>
+    <rect x="190" y="18" width="50" height="28" rx="7" class="proc"/><text x="250" y="37" class="legend">process (service)</text>
+    <path d="M390,20 H440 M390,44 H440" class="store"/><rect x="390" y="20" width="16" height="24" class="sid"/><text x="450" y="37" class="legend">data store</text>
+    <path d="M560,32 H610" class="flow"/><text x="620" y="37" class="legend">data flow (HTTP)</text>
+    <path d="M760,32 H810" class="evt"/><text x="820" y="37" class="legend">data flow through an event queue</text>
+    <path d="M1060,32 H1110" class="opt"/><text x="1120" y="37" class="legend">optional LLM data</text>
+    <text x="1270" y="37" class="pii">orange: privacy control</text>
+  </g>
+</svg>

@@ -1,0 +1,212 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1010" viewBox="0 0 1500 1010" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <marker id="sync" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2b3634"/>
+    </marker>
+    <marker id="async" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f7c74"/>
+    </marker>
+    <marker id="opt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a9795"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #b9c4c2; stroke-width: 1.5; }
+      .svc { fill: #ffffff; stroke: #0f7c74; stroke-width: 2; }
+      .bus { fill: #fdf5e6; stroke: #9a5b00; stroke-width: 2; }
+      .ext { fill: #f7f9f8; stroke: #8a9795; stroke-width: 1.5; stroke-dasharray: 6 4; }
+      .band { fill: #eef3f2; stroke: #b9c4c2; stroke-width: 1.5; }
+      .name { font-size: 17px; font-weight: 700; fill: #17201f; }
+      .port { font-size: 12px; font-weight: 600; fill: #0f7c74; }
+      .busname { font-size: 17px; font-weight: 700; fill: #6b4000; }
+      .txt { font-size: 12.5px; fill: #3d4a48; }
+      .db { font-size: 12px; fill: #5d6b69; font-style: italic; }
+      .lbl { font-size: 12px; fill: #2b3634; }
+      .albl { font-size: 12px; fill: #0f7c74; font-weight: 600; }
+      .olbl { font-size: 12px; fill: #6b7775; }
+      .sync { stroke: #2b3634; stroke-width: 1.6; fill: none; marker-end: url(#sync); }
+      .async { stroke: #0f7c74; stroke-width: 1.8; fill: none; stroke-dasharray: 7 4; marker-end: url(#async); }
+      .opt { stroke: #8a9795; stroke-width: 1.4; fill: none; stroke-dasharray: 2 4; marker-end: url(#opt); }
+      .title { font-size: 22px; font-weight: 700; fill: #17201f; }
+      .sub { font-size: 13px; fill: #5d6b69; }
+      .actor { font-size: 14px; font-weight: 600; fill: #17201f; }
+      .legend { font-size: 12.5px; fill: #3d4a48; }
+    </style>
+  </defs>
+
+  <rect width="1500" height="1010" fill="#f3f5f4"/>
+
+  <!-- title -->
+  <text x="40" y="38" class="title">HELIX: AI support agent and incident escalation (container view)</text>
+  <text x="40" y="60" class="sub">Five independently deployable services, each with its own SQLite database. docker compose starts everything, including RabbitMQ, Prometheus and Grafana.</text>
+
+  <!-- actors -->
+  <g transform="translate(170,92)">
+    <circle cx="0" cy="0" r="11" fill="none" stroke="#17201f" stroke-width="1.8"/>
+    <path d="M-16,30 Q0,6 16,30" fill="none" stroke="#17201f" stroke-width="1.8"/>
+    <text x="26" y="12" class="actor">Customer (developer using Helix Cloud)</text>
+  </g>
+  <g transform="translate(1180,92)">
+    <circle cx="0" cy="0" r="11" fill="none" stroke="#17201f" stroke-width="1.8"/>
+    <path d="M-16,30 Q0,6 16,30" fill="none" stroke="#17201f" stroke-width="1.8"/>
+    <text x="26" y="12" class="actor">On-call engineer</text>
+  </g>
+
+  <!-- Chat / RAG -->
+  <rect x="50" y="190" width="330" height="170" rx="12" class="svc"/>
+  <text x="68" y="218" class="name">Chat / RAG Support</text>
+  <text x="362" y="218" class="port" text-anchor="end">:8001  chat UI</text>
+  <text x="68" y="242" class="txt">Answers from the knowledge base, or escalates.</text>
+  <text x="68" y="261" class="txt">Confidence gate (threshold per embedding model),</text>
+  <text x="68" y="280" class="txt">injection guard, token budget and daily ceiling,</text>
+  <text x="68" y="299" class="txt">live hand-off to an agent, resumable chats.</text>
+  <text x="68" y="325" class="db">SQLite: decisions, conversations, messages,</text>
+  <text x="68" y="342" class="db">escalation outbox, event outbox</text>
+
+  <!-- Incident / Ticket -->
+  <rect x="585" y="190" width="330" height="170" rx="12" class="svc"/>
+  <text x="603" y="218" class="name">Incident / Ticket</text>
+  <text x="897" y="218" class="port" text-anchor="end">:8002</text>
+  <text x="603" y="242" class="txt">System of record: OPEN → ACKED → RESOLVED,</text>
+  <text x="603" y="261" class="txt">reopen; revision on every resolve/reopen.</text>
+  <text x="603" y="280" class="txt">Idempotency-Key on create; repeat transitions</text>
+  <text x="603" y="299" class="txt">are no-ops. Transactional outbox.</text>
+  <text x="603" y="325" class="db">SQLite: tickets, idempotency_keys,</text>
+  <text x="603" y="342" class="db">outbox, processed_events</text>
+
+  <!-- On-Call -->
+  <rect x="1120" y="190" width="330" height="170" rx="12" class="svc"/>
+  <text x="1138" y="218" class="name">On-Call &amp; Escalation</text>
+  <text x="1432" y="218" class="port" text-anchor="end">:8003  console</text>
+  <text x="1138" y="242" class="txt">Roster with optimistic concurrency (409 if stale).</text>
+  <text x="1138" y="261" class="txt">Pages level 0, escalates on ack timeout;</text>
+  <text x="1138" y="280" class="txt">deadlines in the DB survive restarts.</text>
+  <text x="1138" y="299" class="txt">Console: ack, live chat, approve summaries.</text>
+  <text x="1138" y="325" class="db">SQLite: roster, pages (deadline),</text>
+  <text x="1138" y="342" class="db">incidents projection, processed_events</text>
+
+  <!-- RabbitMQ -->
+  <rect x="585" y="455" width="330" height="120" rx="12" class="bus"/>
+  <text x="603" y="483" class="busname">RabbitMQ</text>
+  <text x="897" y="483" class="port" text-anchor="end" fill="#9a5b00">topic exchange support.events</text>
+  <text x="603" y="507" class="txt">Durable queues declared up front by every service.</text>
+  <text x="603" y="526" class="txt">At-least-once delivery; consumers dedupe on</text>
+  <text x="603" y="545" class="txt">event_id. Mandatory publish: unroutable events</text>
+  <text x="603" y="564" class="txt">stay in the publisher's outbox.</text>
+
+  <!-- Knowledge Base -->
+  <rect x="50" y="560" width="330" height="170" rx="12" class="svc"/>
+  <text x="68" y="588" class="name">Knowledge Base</text>
+  <text x="362" y="588" class="port" text-anchor="end">:8004  article browser</text>
+  <text x="68" y="612" class="txt">Versioned vector index (hash-v1, nomic-embed-text).</text>
+  <text x="68" y="631" class="txt">Rebuild alongside, then switch atomically.</text>
+  <text x="68" y="650" class="txt">Indexes approved fixes; withdraws on reopen;</text>
+  <text x="68" y="669" class="txt">ordered by ticket revision; PII removed.</text>
+  <text x="68" y="695" class="db">SQLite: documents, chunks (stamped with model),</text>
+  <text x="68" y="712" class="db">indexes, incident_revisions, processed_events</text>
+
+  <!-- Summariser -->
+  <rect x="1120" y="560" width="330" height="170" rx="12" class="svc"/>
+  <text x="1138" y="588" class="name">Summariser</text>
+  <text x="1432" y="588" class="port" text-anchor="end">:8005</text>
+  <text x="1138" y="612" class="txt">Drafts a help-centre article from a closed chat.</text>
+  <text x="1138" y="631" class="txt">Checks: grounding per step, topic, cause,</text>
+  <text x="1138" y="650" class="txt">injection, personal data. Falls back to rules.</text>
+  <text x="1138" y="669" class="txt">Nothing is published without agent approval.</text>
+  <text x="1138" y="695" class="db">SQLite: drafts (PENDING / APPROVED /</text>
+  <text x="1138" y="712" class="db">REJECTED, checks, transcript), processed_events</text>
+
+  <!-- Ollama (external, optional) -->
+  <rect x="585" y="680" width="330" height="80" rx="12" class="ext"/>
+  <text x="603" y="707" class="name" fill="#3d4a48">Ollama on the host (optional)</text>
+  <text x="603" y="729" class="txt">llama3.2:1b for answers and drafts; nomic-embed-text.</text>
+  <text x="603" y="747" class="txt">Default is a simulated LLM: runs offline at zero cost.</text>
+
+  <!-- observability band -->
+  <rect x="50" y="820" width="1400" height="80" rx="12" class="band"/>
+  <text x="68" y="850" class="name">Prometheus  :9090   →   Grafana  :3000</text>
+  <text x="68" y="874" class="txt">Scrapes /metrics from all five services every 5 s. Dashboard: request rate, errors, p95 latency, circuit breaker, outbox backlog, paging,</text>
+  <text x="68" y="892" class="txt">answer/escalate decisions, LLM and embedding cost against the daily ceiling, summaries waiting for approval.</text>
+
+  <!-- ===================== arrows ===================== -->
+  <!-- actors -->
+  <path d="M170,128 V188" class="sync"/>
+  <text x="180" y="150" class="lbl">browser</text>
+  <path d="M1180,128 V188" class="sync"/>
+  <text x="1190" y="150" class="lbl">browser</text>
+
+  <!-- Chat -> Tickets (sync) -->
+  <path d="M380,232 H583" class="sync"/>
+  <text x="392" y="224" class="lbl">POST /tickets on escalation</text>
+  <text x="392" y="249" class="olbl">Idempotency-Key;</text>
+  <text x="392" y="264" class="olbl">escalation outbox retries</text>
+  <text x="392" y="279" class="olbl">if Tickets is down</text>
+
+  <!-- On-Call -> Tickets (sync) -->
+  <path d="M1120,232 H917" class="sync"/>
+  <text x="1108" y="224" class="lbl" text-anchor="end">ack / resolve / reopen</text>
+
+  <!-- On-Call -> Chat (sync, over the top) -->
+  <path d="M1250,188 V174 H290 V188" class="sync"/>
+  <text x="760" y="168" class="lbl" text-anchor="middle">live chat messages, end chat, transcript (On-Call → Chat)</text>
+
+  <!-- Chat -> Knowledge (sync, with resilience) -->
+  <path d="M120,360 V558" class="sync"/>
+  <text x="130" y="420" class="lbl">POST /search</text>
+  <text x="130" y="438" class="olbl">2 s deadline per attempt,</text>
+  <text x="130" y="455" class="olbl">retry budget 3 s,</text>
+  <text x="130" y="472" class="olbl">circuit breaker:</text>
+  <text x="130" y="489" class="olbl">KB down → escalate,</text>
+  <text x="130" y="506" class="olbl">never guess</text>
+
+  <!-- Tickets -> RabbitMQ (async) -->
+  <path d="M750,360 V453" class="async"/>
+  <text x="760" y="394" class="albl">outbox relay</text>
+  <text x="760" y="411" class="albl">incident.opened / acked /</text>
+  <text x="760" y="428" class="albl">resolved / reopened</text>
+
+  <!-- Chat -> RabbitMQ (async conversation.closed) -->
+  <path d="M380,345 H560 V505 H583" class="async"/>
+  <text x="392" y="322" class="albl">outbox: conversation.closed</text>
+  <text x="392" y="337" class="olbl" fill="#0f7c74">(carries the transcript)</text>
+
+  <!-- RabbitMQ -> On-Call (async) -->
+  <path d="M915,475 H1010 V332 H1118" class="async"/>
+  <text x="1002" y="400" class="albl" text-anchor="end">incident.*</text>
+  <text x="1002" y="417" class="olbl" fill="#0f7c74" text-anchor="end">page, cancel,</text>
+  <text x="1002" y="432" class="olbl" fill="#0f7c74" text-anchor="end">re-page</text>
+
+  <!-- RabbitMQ -> Knowledge (async) -->
+  <path d="M585,555 H470 V655 H382" class="async"/>
+  <text x="478" y="600" class="albl">incident.resolved</text>
+  <text x="478" y="616" class="albl">incident.reopened</text>
+  <text x="478" y="632" class="olbl" fill="#0f7c74">index / withdraw</text>
+
+  <!-- RabbitMQ -> Summariser (async) -->
+  <path d="M915,545 H1060 V610 H1118" class="async"/>
+  <text x="925" y="537" class="albl">conversation.closed</text>
+
+  <!-- On-Call -> Summariser (sync) -->
+  <path d="M1385,360 V558" class="sync"/>
+  <text x="1375" y="440" class="lbl" text-anchor="end">drafts to approve,</text>
+  <text x="1375" y="457" class="lbl" text-anchor="end">approve / reject</text>
+
+  <!-- Summariser -> Tickets (sync) -->
+  <path d="M1150,560 V505 H1040 V300 H917" class="sync"/>
+  <text x="1032" y="292" class="lbl" text-anchor="end">approved → resolve</text>
+
+  <!-- optional LLM calls -->
+  <path d="M380,712 H583" class="opt"/>
+  <text x="392" y="705" class="olbl">embeddings (v2)</text>
+  <path d="M1118,712 H917" class="opt"/>
+  <text x="1108" y="705" class="olbl" text-anchor="end">article drafts</text>
+  <path d="M50,300 H28 V775 H583" class="opt"/>
+  <text x="300" y="792" class="olbl">answers (Chat → Ollama, behind a grounding check)</text>
+
+  <!-- legend -->
+  <g transform="translate(50,935)">
+    <rect width="1400" height="56" rx="10" fill="#ffffff" stroke="#dbe2e0"/>
+    <path d="M20,28 H80" class="sync"/><text x="92" y="32" class="legend">synchronous HTTP (with timeouts and retries)</text>
+    <path d="M430,28 H490" class="async"/><text x="502" y="32" class="legend">asynchronous event through RabbitMQ (outbox → at-least-once → idempotent consumer)</text>
+    <path d="M1080,28 H1140" class="opt"/><text x="1152" y="32" class="legend">optional local LLM call</text>
+  </g>
+</svg>
