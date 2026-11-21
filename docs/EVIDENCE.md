@@ -531,6 +531,80 @@ Grafana screenshots to take by hand (the script cannot capture the dashboard):
 4. AI budget: "Shared daily AI budget" panel during a tiny-cap run (E13).
 5. Load test: request rate and latency panels during `scripts/load_test.py` (E19).
 
+## E19. Load test on POST /chat
+
+`python scripts/load_test.py` runs a closed loop: each simulated user sends a question,
+waits for the reply, then sends the next. About 80% are KB questions and 20% unknown ones,
+which escalate and create a ticket. `LLM_MODE=simulated`, hash-v1 index, everything on one
+laptop (Docker Desktop, 3.8 GiB VM), with the Fix 5 limits: chat 0.5 CPU / 256 MiB.
+Run on 2026-11-21.
+
+**Run 2, daily AI budget raised** (`DAILY_TOKEN_CEILING=1e9`), so latency is measured on its own:
+
+| users | requests | req/s | p50 | p95 | p99 | max | errors |
+|---|---|---|---|---|---|---|---|
+| 5 (30 s) | 289 | 9.5 | 323 ms | 1.7 s | 2.6 s | 3.8 s | 0% |
+| 10 (30 s) | 306 | 9.9 | 587 ms | 3.3 s | 5.4 s | 6.8 s | 0% |
+| 20 (30 s) | 322 | 10.0 | 1.24 s | 6.2 s | 9.6 s | 19.2 s | 0% |
+| **20 (60 s)** | **503** | **8.2** | **1.40 s** | **8.5 s** | **14.1 s** | 21.4 s | **0.2%** (1) |
+| 40 (30 s) | 213 | 6.4 | 3.4 s | 19.1 s | 26.6 s | 28.3 s | 11.7% |
+| 80 (30 s) | 350 | 9.5 | 6.2 s | 15.9 s | 22.9 s | 27.8 s | 6.3% |
+
+Outcomes were only `answer/grounded` and `escalate/low_confidence`, plus errors. There were no
+`kb_unavailable` escalations in this run.
+
+**Where it degrades.**
+- Throughput levels off at about 10 req/s from 10 users. After that, extra users only add
+  queueing: p50 roughly doubles each time the user count doubles.
+- From 20 users, p95 goes past 5 s. From 40 users, errors start.
+- Every error checked was an HTTP 500. A repeat at 40 users for 20 s showed the cause:
+  14 × `sqlite3.OperationalError: database is locked` in Chat. The frames were
+  `conversations.ensure` (20), `conversations.add` (4) and `store.add_escalation` (2).
+  Each `/chat` makes about five separate write transactions on the one `chat.db`, and with
+  40 concurrent requests on 0.5 CPU, writers wait past the 10 s busy timeout.
+- Chat memory stayed at 117–130 MiB of 256 MiB, so memory was not the limit.
+
+**Run 1, default budget (200,000 tokens/day).** Same script, before run 2:
+20 users × 60 s gave 530 requests, 8.7 req/s, p50 1.4 s, p95 7.6 s, 0.2% errors. In the
+steps that followed, the **shared daily AI budget ran out**. Across both runs Chat recorded
+288 × `daily_budget_exhausted` and 197 × `kb_unavailable` escalations; the latter came from
+KB timeouts at 40–80 users. At 80 users, 179 of 201 requests escalated, with 11% errors.
+This is the Fix 3 cap doing its job under load, but it means ~2,000 simulated answers use up a
+day's notional budget.
+
+Not measured: a multi-replica setup, LLM_MODE=ollama under load (llama3.2:1b on CPU would be
+far slower), and network latency between hosts.
+
+## E20. Remaining failure scenarios: KB erroring, Tickets hung, Summariser down, Ollama down, roster 409
+
+`powershell -File scripts/extra_scenarios.ps1`, run on 2026-11-21 (`LLM_MODE=simulated`
+unless stated):
+
+```
+A. Knowledge returns 503 on 50% of searches (/admin/fault error_rate 0.5)
+   6/6 questions answered/grounded in 133-956 ms; breaker stayed CLOSED
+   chat: 3 x "[kb] attempt 1/3 failed (HTTPStatusError)", 1 x "attempt 2/3 failed"; knowledge: 4 x 503
+   -> the shared retry policy absorbed every injected error; none reached the customer
+B. Tickets hung (docker compose pause tickets)
+   escalate/low_confidence, ticket=queued, 3212 ms (3 s per-attempt deadline, not a hang)
+   after unpause: escalations_pending 1 -> 0 in 4 s (escalation outbox, same Idempotency-Key)
+C. Summariser stopped while a conversation closed
+   summariser.conversations queue: 1 message while down; on-call /summaries -> HTTP 503
+   ("Summariser Service unavailable"); after start: queue 0, draft S-9 for T-BUDGET-19240 created
+D. Ollama down: chat with LLM_MODE=ollama and OLLAMA_URL on a closed port
+   answer/grounded degraded=True model=simulated 295 ms, extractive answer from the help article
+   log: [llm] ollama failed (ConnectError('[Errno 111] Connection refused')); using extractive answer
+E. Two admins edit the on-call roster from the same version
+   admin 1 PUT version 1 -> 200; admin 2 PUT version 1 (stale) -> 409; roster version 2 is admin 1's
+```
+
+Notes:
+- A depends on the error rate. At 50% with 3 attempts, about 1 in 8 questions would still fail
+  all three and escalate (`kb_unavailable`); none did in these 6 tries.
+- D was run as a separate chat container (`docker compose run`) so the main stack was untouched.
+  The Summariser's Ollama-down path (rule-based draft, check `llm_available`) is covered by its
+  code path and E9, but was not re-run here.
+
 ## Known limitations (honest list for the report)
 
 - Repeated questions while the KB is down open one ticket each (5 pages for one problem).
